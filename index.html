@@ -473,52 +473,43 @@
             </div>
 
             <div class="panel-section">
-                <div class="panel-section-title">🧹 Clean / Restore</div>
-                <select class="key-select" id="cleanPresetSelect" onchange="applyCleanPreset()">
-                    <option value="minimal">Minimal (technical only)</option>
-                    <option value="standard" selected>Standard</option>
-                    <option value="custom">Custom</option>
+                <div class="panel-section-title">🧹 Clean & Restore</div>
+                <select class="key-select" id="cleanPresetSelect" onchange="applyCleanPreset()" style="margin-bottom:6px;">
+                    <option value="minimal">Preset: Minimal (technical only)</option>
+                    <option value="standard" selected>Preset: Standard</option>
+                    <option value="custom">Preset: Custom</option>
                 </select>
-                <div id="cleanModuleGrid" style="margin-top:6px;">
-                    <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-secondary);padding:1px 0;cursor:pointer;">
-                        <input type="checkbox" class="clean-module" data-module="duplicate" checked onchange="markCleanCustom()"> Remove Duplicates
-                    </label>
-                    <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-secondary);padding:1px 0;cursor:pointer;">
-                        <input type="checkbox" class="clean-module" data-module="hanging" checked onchange="markCleanCustom()"> Repair Hanging Notes
-                    </label>
-                    <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-secondary);padding:1px 0;cursor:pointer;">
-                        <input type="checkbox" class="clean-module" data-module="overlap" checked onchange="markCleanCustom()"> Fix Overlaps
-                    </label>
-                    <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-secondary);padding:1px 0;cursor:pointer;">
-                        <input type="checkbox" class="clean-module" data-module="ghost" checked onchange="markCleanCustom()"> Remove Ghost Notes
-                    </label>
-                    <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-secondary);padding:1px 0;cursor:pointer;">
-                        <input type="checkbox" class="clean-module" data-module="merge" checked onchange="markCleanCustom()"> Merge Fragments
-                    </label>
-                    <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-secondary);padding:1px 0;cursor:pointer;">
-                        <input type="checkbox" class="clean-module" data-module="pitch" checked onchange="markCleanCustom()"> Fix Pitch Flicker
-                    </label>
-                    <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-secondary);padding:1px 0;cursor:pointer;">
-                        <input type="checkbox" class="clean-module" data-module="timing" onchange="markCleanCustom()"> Quantize Timing
-                    </label>
-                    <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-secondary);padding:1px 0;cursor:pointer;">
-                        <input type="checkbox" class="clean-module" data-module="velocity" checked onchange="markCleanCustom()"> Smooth Velocity
-                    </label>
-                    <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-secondary);padding:1px 0;cursor:pointer;">
-                        <input type="checkbox" id="cleanKeyModule" onchange="markCleanCustom()"> Correct to Key (uses Key & Mode below)
-                    </label>
+                <select class="key-select" id="instrumentSelect" style="margin-bottom:6px;">
+                    <option value="piano">Piano</option>
+                    <option value="guitar">Guitar</option>
+                    <option value="bass">Bass</option>
+                    <option value="strings">Strings</option>
+                    <option value="vocals">Vocals</option>
+                    <option value="drums">Drums</option>
+                    <option value="auto">Auto (generic)</option>
+                </select>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 8px;">
+                    <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" id="modDuplicate" checked onchange="markCleanCustom()"> Duplicates</label>
+                    <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" id="modHanging" checked onchange="markCleanCustom()"> Hanging</label>
+                    <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" id="modOverlap" checked onchange="markCleanCustom()"> Overlaps</label>
+                    <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" id="modGhost" checked onchange="markCleanCustom()"> Ghost Notes</label>
+                    <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" id="modMerge" checked onchange="markCleanCustom()"> Merge Close</label>
+                    <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" id="modPitch" onchange="markCleanCustom()"> Pitch Flicker</label>
+                    <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" id="modTiming" onchange="markCleanCustom()"> Timing Snap</label>
+                    <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" id="modVelocity" onchange="markCleanCustom()"> Velocity Smooth</label>
                 </div>
-                <select class="key-select" id="ghostProfileSelect" style="margin-top:6px;">
-                    <option value="auto">Ghost profile: Auto</option>
-                    <option value="piano">Ghost profile: Piano</option>
-                    <option value="guitar">Ghost profile: Guitar</option>
-                    <option value="bass">Ghost profile: Bass</option>
-                    <option value="strings">Ghost profile: Strings</option>
-                    <option value="vocals">Ghost profile: Vocals</option>
-                    <option value="drums">Ghost profile: Drums</option>
+                <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-secondary);margin-top:6px;cursor:pointer;">
+                    <input type="checkbox" id="modKey" onchange="markCleanCustom()"> Snap to Key
+                </label>
+                <select class="key-select" id="keyScaleVariantSelect" style="margin-top:4px;">
+                    <option value="major">Major</option>
+                    <option value="minor">Natural Minor</option>
+                    <option value="harmonic_minor">Harmonic Minor</option>
+                    <option value="melodic_minor">Melodic Minor</option>
                 </select>
-                <button class="action-btn primary" id="cleanRestoreBtn" onclick="runCleanRestore()" disabled style="margin-top:6px;">🧹 Clean / Restore</button>
-                <div id="cleanResultInfo" style="font-size:10px;color:var(--text-muted);margin-top:4px;white-space:pre-wrap;"></div>
+                <div style="font-size:9px;color:var(--text-muted);margin-top:3px;line-height:1.4;">Uses the root from Key & Mode below. Only Snap to Key changes pitches — everything else fixes timing/technical issues.</div>
+                <button class="action-btn success" id="restoreBtn" onclick="runRestoration()" disabled style="margin-top:6px;">🧹 Clean & Restore</button>
+                <div id="restorationInfo" style="font-size:10px;color:var(--text-muted);margin-top:4px;"></div>
             </div>
 
             <div class="panel-section">
@@ -1455,64 +1446,17 @@
         }
 
         // ============================================================
-        // 4b. MIDI Health Analysis & Restoration Engine
-        // (ported from MIDI Restoration Studio v5.2 — note-level fixes only;
-        //  audio-reference-based restoration was left out of this pass)
+        // 4b. Restoration Engine (ported from MIDI Restoration Studio v5.2)
         // ============================================================
 
-        class MidiHealthAnalysis {
-            static analyze(notes) {
-                const stats = {
-                    noteCount: notes.length,
-                    duplicates: 0,
-                    overlaps: 0,
-                    hanging: 0,
-                    outOfRange: 0,
-                    avgVelocity: 0,
-                    confidence: 0,
-                    issues: [],
-                };
-                if (notes.length === 0) return stats;
-
-                const seen = new Set();
-                let totalVelocity = 0;
-                for (const n of notes) {
-                    totalVelocity += n.velocity;
-                    const key = `${n.track || 0}|${n.channel || 0}|${n.note}|${Math.round(n.start)}|${Math.round(n.end)}`;
-                    if (seen.has(key)) stats.duplicates++;
-                    else seen.add(key);
-                    if (n.hanging) stats.hanging++;
-                    if (n.note < 21 || n.note > 108) stats.outOfRange++;
-                    for (const other of notes) {
-                        if (n === other) continue;
-                        if (n.note === other.note && n.start < other.end && other.start < n.end) {
-                            stats.overlaps++;
-                            break;
-                        }
-                    }
-                }
-                stats.avgVelocity = Math.round(totalVelocity / notes.length);
-
-                let confidence = 100;
-                if (stats.duplicates > 0) { confidence -= Math.min(20, stats.duplicates * 2); stats.issues.push(`${stats.duplicates} duplicate notes`); }
-                if (stats.hanging > 0) { confidence -= Math.min(15, stats.hanging * 3); stats.issues.push(`${stats.hanging} hanging notes`); }
-                if (stats.overlaps > 0) { confidence -= Math.min(20, stats.overlaps); stats.issues.push(`${stats.overlaps} overlapping notes`); }
-                if (stats.outOfRange > 0) { confidence -= Math.min(15, stats.outOfRange * 2); stats.issues.push(`${stats.outOfRange} notes outside piano range`); }
-                stats.confidence = Math.max(0, Math.min(100, confidence));
-                return stats;
-            }
-        }
-
         class RestorationEngine {
-            constructor(notes, ppq, originalMaxTime = null) {
+            constructor(notes) {
                 this.originalNotes = notes.map(n => ({ ...n }));
-                this.ppq = ppq;
-                this.originalMaxTime = originalMaxTime ?? (notes.length ? Math.max(...notes.map(n => n.end ?? (n.start + 1))) : 0);
                 this.stats = { removed: 0, merged: 0, repaired: 0, corrected: 0, keyCorrected: 0 };
                 this.audit = [];
             }
 
-            restore(modules, instrument, keyRoot = null, keyScale = 'major') {
+            restore(modules, instrument, scale) {
                 let result = this.originalNotes.map(n => ({ ...n }));
                 this.stats = { removed: 0, merged: 0, repaired: 0, corrected: 0, keyCorrected: 0 };
                 this.audit = [];
@@ -1523,21 +1467,9 @@
                 if (modules.ghost) result = this.removeGhosts(result, instrument);
                 if (modules.merge) result = this.mergeNotes(result);
                 if (modules.pitch) result = this.repairPitchFlicker(result);
-                if (modules.key && keyRoot !== null && keyRoot !== '') result = this.correctToKey(result, keyRoot, keyScale);
+                if (modules.key && scale) result = this.correctToKey(result, scale);
                 if (modules.timing) { result = this.repairTiming(result); if (modules.overlap) result = this.repairOverlaps(result); }
                 if (modules.velocity) result = this.smoothVelocity(result);
-
-                if (this.originalMaxTime > 0) {
-                    const limit = this.originalMaxTime;
-                    result = result.map(n => {
-                        if (n.end > limit) {
-                            const clampedEnd = Math.max(n.start + 1, limit);
-                            this.stats.corrected++;
-                            return { ...n, end: clampedEnd, duration: clampedEnd - n.start };
-                        }
-                        return n;
-                    });
-                }
 
                 result.sort((a, b) => a.start - b.start);
                 return result;
@@ -1548,8 +1480,13 @@
                 const result = [];
                 for (const n of notes) {
                     const key = `${n.track || 0}|${n.channel || 0}|${n.note}|${Math.round(n.start)}|${Math.round(n.end)}`;
-                    if (!seen.has(key)) { seen.add(key); result.push(n); }
-                    else { this.stats.removed++; this.audit.push({ type: 'duplicate', note: n }); }
+                    if (!seen.has(key)) {
+                        seen.add(key);
+                        result.push(n);
+                    } else {
+                        this.stats.removed++;
+                        this.audit.push({ type: 'duplicate', note: n, removed: true });
+                    }
                 }
                 return result;
             }
@@ -1557,11 +1494,9 @@
             repairHanging(notes) {
                 return notes.map(n => {
                     if (n.hanging) {
-                        n.end = n.start + 240;
-                        n.duration = 240;
-                        n.hanging = false;
+                        n = { ...n, end: n.start + 240, duration: 240, hanging: false };
                         this.stats.repaired++;
-                        this.audit.push({ type: 'hanging', note: n });
+                        this.audit.push({ type: 'hanging', note: n, repaired: true });
                     }
                     return n;
                 });
@@ -1569,7 +1504,7 @@
 
             repairOverlaps(notes) {
                 const sorted = notes.map(n => ({ ...n })).sort((a, b) =>
-                    a.track - b.track || a.channel - b.channel || a.note - b.note || a.start - b.start
+                    (a.track || 0) - (b.track || 0) || (a.channel || 0) - (b.channel || 0) || a.note - b.note || a.start - b.start
                 );
                 const lastByKey = new Map();
                 const result = [];
@@ -1580,7 +1515,7 @@
                         previous.end = Math.max(previous.start + 1, n.start);
                         previous.duration = previous.end - previous.start;
                         this.stats.repaired++;
-                        this.audit.push({ type: 'overlap', note: n });
+                        this.audit.push({ type: 'overlap', note: n, repaired: true });
                     }
                     n.end = Math.max(n.start + 1, n.end ?? (n.start + Math.max(1, n.duration || 1)));
                     n.duration = n.end - n.start;
@@ -1600,12 +1535,12 @@
                     drums: { minDuration: 30, minVelocity: 15 },
                     auto: { minDuration: 60, minVelocity: 8 },
                 };
-                const t = thresholds[instrument] || thresholds.auto;
+                const t = thresholds[instrument] || thresholds.piano;
                 return notes.filter(n => {
                     const duration = n.duration || 240;
                     if (duration < t.minDuration || n.velocity < t.minVelocity) {
                         this.stats.removed++;
-                        this.audit.push({ type: 'ghost', note: n });
+                        this.audit.push({ type: 'ghost', note: n, removed: true });
                         return false;
                     }
                     return true;
@@ -1627,9 +1562,11 @@
                             current.duration = current.end - current.start;
                             current.velocity = Math.max(current.velocity, next.velocity);
                             this.stats.merged++;
-                            this.audit.push({ type: 'merge', note: next });
+                            this.audit.push({ type: 'merge', note: next, merged: true });
                             j++;
-                        } else break;
+                        } else {
+                            break;
+                        }
                     }
                     result.push(current);
                     i = j;
@@ -1645,7 +1582,7 @@
                     byVoice.get(key).push(n);
                 }
                 const result = [];
-                const threshold = Math.max(1, Math.round(this.ppq / 8));
+                const threshold = Math.max(1, Math.round((state.ppq || 480) / 8));
                 for (const voice of byVoice.values()) {
                     voice.sort((a, b) => a.start - b.start || a.note - b.note);
                     let i = 0;
@@ -1655,7 +1592,7 @@
                             const merged = { ...a, end: c.end, duration: c.end - a.start, velocity: Math.max(a.velocity, c.velocity) };
                             result.push(merged);
                             this.stats.corrected++;
-                            this.audit.push({ type: 'pitch_flicker', note: merged });
+                            this.audit.push({ type: 'pitch_flicker', note: merged, corrected: true });
                             i += 3;
                         } else {
                             result.push(a);
@@ -1663,16 +1600,11 @@
                         }
                     }
                 }
-                return result.sort((a, b) => a.start - b.start || a.track - b.track || a.channel - b.channel || a.note - b.note);
+                return result.sort((a, b) => a.start - b.start || (a.track || 0) - (b.track || 0) || (a.channel || 0) - (b.channel || 0) || a.note - b.note);
             }
 
-            correctToKey(notes, keyRoot, scaleType) {
-                const scales = {
-                    major: [0, 2, 4, 5, 7, 9, 11],
-                    naturalMinor: [0, 2, 3, 5, 7, 8, 10],
-                };
-                const scale = scales[scaleType] || scales.major;
-                const inScale = new Set(scale.map(iv => (iv + keyRoot) % 12));
+            correctToKey(notes, scale) {
+                const inScale = new Set(scale);
                 return notes.map(n => {
                     const pc = ((n.note % 12) + 12) % 12;
                     if (inScale.has(pc)) return n;
@@ -1686,18 +1618,26 @@
                     const newNote = Math.min(127, Math.max(0, n.note + shift));
                     this.stats.corrected++;
                     this.stats.keyCorrected++;
-                    this.audit.push({ type: 'key_correction', note: n, newNote });
-                    return { ...n, note: newNote, keyCorrected: true };
+                    this.audit.push({ type: 'key_correction', note: n, corrected: true, newNote });
+                    return { ...n, note: newNote };
                 });
             }
 
             repairTiming(notes) {
-                const grid = Math.max(1, Math.round(this.ppq / 4));
+                const grid = Math.max(1, Math.round((state.ppq || 480) / 4));
                 const strength = 0.5;
                 return notes.map(n => {
                     const qStart = Math.round(n.start / grid) * grid;
                     const offset = (qStart - n.start) * strength;
-                    return { ...n, start: Math.round(n.start + offset), end: Math.round((n.end || n.start + 240) + offset) };
+                    if (Math.abs(offset) > 0.5) {
+                        this.stats.corrected++;
+                        this.audit.push({ type: 'timing', note: n, corrected: true });
+                    }
+                    return {
+                        ...n,
+                        start: Math.round(n.start + offset),
+                        end: Math.round((n.end || n.start + 240) + offset),
+                    };
                 });
             }
 
@@ -1716,18 +1656,17 @@
             }
 
             getStats() { return this.stats; }
+            getAudit() { return this.audit; }
         }
 
         class ValidationEngine {
-            static validate(originalNotes, cleanedNotes, ppq, originalMaxTime = null) {
+            static validate(originalNotes, cleanedNotes) {
                 const errors = [];
                 const warnings = [];
-                const sourceEnd = originalMaxTime ?? (originalNotes.length ? Math.max(...originalNotes.map(n => n.end ?? (n.start + 1))) : 0);
+                const sourceEnd = originalNotes.length ? Math.max(...originalNotes.map(n => n.end ?? (n.start + 1))) : 0;
                 const cleanedEnd = cleanedNotes.length ? Math.max(...cleanedNotes.map(n => n.end ?? (n.start + 1))) : 0;
 
-                if (cleanedEnd > sourceEnd + Math.max(10, Math.round(ppq * 0.05))) {
-                    errors.push(`Restoration extends beyond source: ${sourceEnd} → ${cleanedEnd} ticks`);
-                } else if (cleanedEnd !== sourceEnd) {
+                if (cleanedEnd !== sourceEnd) {
                     warnings.push(`Last sounding note changed: ${sourceEnd} → ${cleanedEnd} ticks`);
                 }
 
@@ -1769,7 +1708,7 @@
                 const invalidVelocity = cleanedNotes.filter(n => !Number.isFinite(n.velocity) || n.velocity < 1 || n.velocity > 127);
                 if (invalidVelocity.length) errors.push(`${invalidVelocity.length} notes have invalid velocity`);
 
-                return { passed: errors.length === 0, errors, warnings, sourceEnd, cleanedEnd };
+                return { passed: errors.length === 0, errors, warnings };
             }
         }
 
@@ -1847,7 +1786,7 @@
                     $('resetBtn').disabled = false;
                     $('lockBtn').disabled = false;
                     $('generateHarmonyBtn').disabled = false;
-                    $('cleanRestoreBtn').disabled = false;
+                    $('restoreBtn').disabled = false;
 
                     setStatus(`✅ Loaded: ${file.name} (${result.notes.length} notes)`, 'success');
                     renderPianoRoll();
@@ -2392,10 +2331,10 @@
             setTimeout(analyzeHarmony, 100);
         }
 
-        // ---- Clean / Restore UI ----
+        // ---- Clean / Restore presets ----
         const CLEAN_PRESETS = {
-            minimal: { duplicate: true, hanging: true, overlap: true, ghost: true, merge: false, pitch: false, timing: false, velocity: false },
-            standard: { duplicate: true, hanging: true, overlap: true, ghost: true, merge: true, pitch: true, timing: false, velocity: true },
+            minimal: { modDuplicate: true, modHanging: true, modOverlap: true, modGhost: true, modMerge: false, modPitch: false, modTiming: false, modVelocity: false },
+            standard: { modDuplicate: true, modHanging: true, modOverlap: true, modGhost: true, modMerge: true, modPitch: true, modTiming: false, modVelocity: true },
         };
 
         function applyCleanPreset() {
@@ -2403,62 +2342,61 @@
             if (presetName === 'custom') return;
             const preset = CLEAN_PRESETS[presetName];
             if (!preset) return;
-            document.querySelectorAll('.clean-module').forEach(cb => {
-                cb.checked = !!preset[cb.dataset.module];
-            });
+            for (const id in preset) {
+                $(id).checked = preset[id];
+            }
         }
 
         function markCleanCustom() {
             $('cleanPresetSelect').value = 'custom';
         }
 
-        function runCleanRestore() {
+        // ---- Clean & Restore ----
+        function runRestoration() {
             if (!state.notes || state.notes.length === 0) {
                 showModal('No Data', 'Please load a MIDI file first');
                 return;
             }
 
-            const modules = {};
-            document.querySelectorAll('.clean-module').forEach(cb => {
-                modules[cb.dataset.module] = cb.checked;
-            });
-            modules.key = $('cleanKeyModule').checked;
+            const modules = {
+                duplicate: $('modDuplicate').checked,
+                hanging: $('modHanging').checked,
+                overlap: $('modOverlap').checked,
+                ghost: $('modGhost').checked,
+                merge: $('modMerge').checked,
+                pitch: $('modPitch').checked,
+                timing: $('modTiming').checked,
+                velocity: $('modVelocity').checked,
+                key: $('modKey').checked,
+            };
 
-            const before = MidiHealthAnalysis.analyze(state.notes);
+            const instrument = $('instrumentSelect').value;
 
-            let keyRootInt = null;
-            let keyScale = 'major';
+            let scale = null;
             if (modules.key) {
                 const key = $('keySelect').value;
-                keyRootInt = harmonyEngine.getKeyRoot(key);
-                keyScale = key.includes('m') ? 'naturalMinor' : 'major';
+                const scaleVariant = $('keyScaleVariantSelect').value;
+                scale = harmonyEngine.getScale(key, scaleVariant);
             }
 
             pushUndo();
 
-            const originalMaxTime = state.notes.length ? Math.max(...state.notes.map(n => n.end ?? (n.start + 1))) : 0;
-            const engine = new RestorationEngine(state.notes, state.ppq, originalMaxTime);
-            const ghostProfile = $('ghostProfileSelect').value;
-            const cleaned = engine.restore(modules, ghostProfile, keyRootInt, keyScale);
+            const engine = new RestorationEngine(state.notes);
+            const cleaned = engine.restore(modules, instrument, scale);
             const stats = engine.getStats();
-
-            const validation = ValidationEngine.validate(state.notes, cleaned, state.ppq, originalMaxTime);
 
             state.notes = cleaned;
             state.isModified = true;
             refreshCounts();
 
-            const after = MidiHealthAnalysis.analyze(state.notes);
+            const validation = ValidationEngine.validate(state.originalNotes, cleaned);
 
-            const summary =
-                `Removed: ${stats.removed}  Merged: ${stats.merged}\n` +
-                `Repaired: ${stats.repaired}  Key-corrected: ${stats.keyCorrected}\n` +
-                `Confidence: ${before.confidence}% → ${after.confidence}%\n` +
-                (validation.passed ? '✅ Validation passed' : `⚠️ ${validation.errors.join('; ')}`);
-            $('cleanResultInfo').textContent = summary;
+            const summary = `Removed ${stats.removed}, merged ${stats.merged}, repaired ${stats.repaired}, corrected ${stats.corrected}` +
+                (stats.keyCorrected ? `, ${stats.keyCorrected} snapped to key` : '');
+            $('restorationInfo').textContent = summary + (validation.passed ? ' — ✅ validated' : ` — ⚠️ ${validation.errors.join(', ')}`);
 
             renderPianoRoll();
-            setStatus(`✅ Cleaned MIDI — removed ${stats.removed}, repaired ${stats.repaired}, merged ${stats.merged}`, 'success');
+            setStatus(`✅ Restoration complete — ${summary}`, 'success');
             setTimeout(analyzeHarmony, 100);
         }
 
@@ -2784,14 +2722,17 @@
                 'MIDI Melody & Harmony Studio v3.0\n' +
                 '====================================\n\n' +
                 '1. Load a MIDI file (drag & drop or click)\n' +
-                '2. Click "Analyze Harmony" to detect issues\n' +
-                '3. Review issues and suggestions in the right panel\n' +
-                '4. Apply individual suggestions or use "Apply All"\n' +
-                '5. Pick a harmony type and click "Generate Harmony"\n' +
+                '2. Optionally run "Clean & Restore" to fix\n' +
+                '   duplicate/hanging/overlapping notes, ghost\n' +
+                '   notes, timing, velocity, or snap to key\n' +
+                '3. Click "Analyze Harmony" to detect issues\n' +
+                '4. Review issues and suggestions in the right panel\n' +
+                '5. Apply individual suggestions or use "Apply All"\n' +
+                '6. Pick a harmony type and click "Generate Harmony"\n' +
                 '   to add new voice track(s) to the melody\n' +
-                '6. Use Undo/Redo to revert changes\n' +
-                '7. Preview changes with Play (toggle mode with 🔀)\n' +
-                '8. Export the improved/harmonized MIDI\n\n' +
+                '7. Use Undo/Redo to revert changes\n' +
+                '8. Preview changes with Play (toggle mode with 🔀)\n' +
+                '9. Export the improved/harmonized MIDI\n\n' +
                 'Keyboard shortcuts:\n' +
                 'Space - Play/Stop\n' +
                 'A - Analyze\n' +
@@ -2817,6 +2758,10 @@
                 '• Enhanced key detection (major/minor/flat keys)\n' +
                 '• Track-aware analysis (exclude drums)\n' +
                 '• Chord detection with sustained notes\n' +
+                '• Clean & Restore: duplicate/hanging/overlap\n' +
+                '  repair, ghost note removal, note merging,\n' +
+                '  pitch-flicker fix, timing snap, velocity\n' +
+                '  smoothing, and key-snap correction\n' +
                 '• Generate Harmony: Thirds, Sixths, Octave\n' +
                 '  Up/Down, and 3-part Choir (SATB) voicing —\n' +
                 '  adds real new MIDI tracks you can export\n' +
