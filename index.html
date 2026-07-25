@@ -587,6 +587,75 @@
                 <button class="action-btn primary" id="generateHarmonyBtn" onclick="generateHarmony()" disabled style="margin-top:6px;">🎶 Generate Harmony</button>
                 <div id="harmonyTracksInfo" style="font-size:10px;color:var(--text-muted);margin-top:4px;"></div>
             </div>
+
+            <div class="panel-section">
+                <div class="panel-section-title">🎚️ Humanize</div>
+                <select class="key-select" id="feelPreset" onchange="applyFeelPreset()" style="margin-bottom:6px;">
+                    <option value="custom">Feel: Custom</option>
+                    <option value="tight">Feel: Tight</option>
+                    <option value="natural" selected>Feel: Natural</option>
+                    <option value="loose">Feel: Loose</option>
+                    <option value="laidback">Feel: Laid-back</option>
+                    <option value="driving">Feel: Driving</option>
+                </select>
+                <label style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text-secondary);margin-top:3px;">
+                    Timing <input type="range" id="humTiming" min="0" max="40" value="12" style="flex:1;" oninput="humOut('humTiming','ms');markHumCustom()"><span id="humTimingOut" style="width:36px;text-align:right;">12 ms</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text-secondary);margin-top:3px;">
+                    Velocity <input type="range" id="humVelocity" min="0" max="30" value="8" style="flex:1;" oninput="humOut('humVelocity','±');markHumCustom()"><span id="humVelocityOut" style="width:36px;text-align:right;">±8</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text-secondary);margin-top:3px;">
+                    Swing <input type="range" id="humSwing" min="50" max="70" value="54" style="flex:1;" oninput="humOut('humSwing','%');markHumCustom()"><span id="humSwingOut" style="width:36px;text-align:right;">54%</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text-secondary);margin-top:3px;">
+                    Duration <input type="range" id="humDuration" min="0" max="20" value="4" style="flex:1;" oninput="humOut('humDuration','±','%');markHumCustom()"><span id="humDurationOut" style="width:36px;text-align:right;">±4%</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text-secondary);margin-top:3px;">
+                    Strength <input type="range" id="humStrength" min="0" max="100" value="70" style="flex:1;" oninput="humOut('humStrength','','%');markHumCustom()"><span id="humStrengthOut" style="width:36px;text-align:right;">70%</span>
+                </label>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 8px;margin-top:6px;">
+                    <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" id="humProtectDrums" checked> Protect Drums</label>
+                    <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" id="humProtectBass" checked> Protect Bass</label>
+                    <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" id="humKeepChords" checked> Keep Chords</label>
+                    <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" id="humAvoidOverlaps" checked> Avoid Overlaps</label>
+                    <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" id="humAccentBeats"> Accent Beats</label>
+                    <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" id="humPreserveStarts" checked> Preserve Start</label>
+                </div>
+                <label style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text-secondary);margin-top:4px;">
+                    Seed <input type="number" id="humSeed" value="1" style="width:60px;background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border-color);border-radius:4px;padding:2px 4px;">
+                </label>
+                <button class="action-btn primary" id="humanizeBtn" onclick="runHumanize()" disabled style="margin-top:6px;">🎚️ Humanize</button>
+                <div id="humanizeInfo" style="font-size:10px;color:var(--text-muted);margin-top:4px;"></div>
+            </div>
+
+            <div class="panel-section">
+                <div class="panel-section-title">🥁 Match Reference Groove</div>
+                <div class="drop-zone" id="refDropZone" style="padding:10px;">
+                    <div class="drop-zone-icon" style="font-size:20px;">🥁</div>
+                    <div class="drop-zone-text" style="font-size:11px;"><strong>Drop reference MIDI</strong> or click</div>
+                    <input type="file" id="refInput" accept=".mid,.midi" style="display:none">
+                </div>
+                <div id="refStatus" class="file-status missing" style="font-size:10px;">No reference loaded</div>
+                <div id="refGrooveInfo" style="font-size:10px;color:var(--text-muted);margin-top:4px;"></div>
+                <label style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text-secondary);margin-top:6px;">
+                    Timing Str <input type="range" id="grooveTimingStr" min="0" max="100" value="70" style="flex:1;" oninput="humOut('grooveTimingStr','','%')"><span id="grooveTimingStrOut" style="width:36px;text-align:right;">70%</span>
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text-secondary);margin-top:3px;">
+                    Velocity Str <input type="range" id="grooveVelocityStr" min="0" max="100" value="60" style="flex:1;" oninput="humOut('grooveVelocityStr','','%')"><span id="grooveVelocityStrOut" style="width:36px;text-align:right;">60%</span>
+                </label>
+                <select class="key-select" id="grooveModeSelect" style="margin-top:6px;">
+                    <option value="both">Apply: Timing + Velocity</option>
+                    <option value="timing">Apply: Timing only</option>
+                    <option value="velocity">Apply: Velocity only</option>
+                </select>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 8px;margin-top:6px;">
+                    <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" id="groovePreserveChords" checked> Preserve Chords</label>
+                    <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-secondary);cursor:pointer;"><input type="checkbox" id="groovePreserveBass" checked> Preserve Bass</label>
+                    <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-secondary);cursor:pointer;grid-column:1/-1;"><input type="checkbox" id="grooveDrumAware" checked> Drum-aware (skip bass heuristic for drums)</label>
+                </div>
+                <button class="action-btn primary" id="applyGrooveBtn" onclick="applyGroove()" disabled style="margin-top:6px;">🥁 Apply Groove</button>
+                <div id="grooveApplyInfo" style="font-size:10px;color:var(--text-muted);margin-top:4px;"></div>
+            </div>
         </aside>
 
         <!-- ===== CENTER PANEL ===== -->
@@ -696,6 +765,7 @@
             trackNames: [],
             originalTracks: [],
             originalTrackNames: [],
+            refGroove: null,
             // Analysis
             issues: [],
             suggestions: [],
@@ -1738,6 +1808,21 @@
             input.addEventListener('change', e => {
                 if (e.target.files.length) handleMIDIFile(e.target.files[0]);
             });
+
+            const refDrop = $('refDropZone');
+            const refInput = $('refInput');
+            refDrop.addEventListener('click', () => refInput.click());
+            refDrop.addEventListener('dragover', e => { e.preventDefault();
+                refDrop.classList.add('dragover'); });
+            refDrop.addEventListener('dragleave', () => refDrop.classList.remove('dragover'));
+            refDrop.addEventListener('drop', e => {
+                e.preventDefault();
+                refDrop.classList.remove('dragover');
+                if (e.dataTransfer.files.length) loadReferenceFile(e.dataTransfer.files[0]);
+            });
+            refInput.addEventListener('change', e => {
+                if (e.target.files.length) loadReferenceFile(e.target.files[0]);
+            });
         }
 
         function handleMIDIFile(file) {
@@ -1787,6 +1872,8 @@
                     $('lockBtn').disabled = false;
                     $('generateHarmonyBtn').disabled = false;
                     $('restoreBtn').disabled = false;
+                    $('humanizeBtn').disabled = false;
+                    if (state.refGroove) $('applyGrooveBtn').disabled = false;
 
                     setStatus(`✅ Loaded: ${file.name} (${result.notes.length} notes)`, 'success');
                     renderPianoRoll();
@@ -2331,6 +2418,431 @@
             setTimeout(analyzeHarmony, 100);
         }
 
+        // ---- Humanize (ported from MIDI Groove Humanizer Pro) ----
+        function humOut(id, prefix = '', suffix = '') {
+            $(id + 'Out').textContent = `${prefix}${$(id).value}${suffix}`;
+        }
+
+        const FEEL_PRESETS = {
+            tight: { timing: 7, velocity: 4, swing: 51, duration: 2, strength: 55 },
+            natural: { timing: 12, velocity: 8, swing: 54, duration: 4, strength: 70 },
+            loose: { timing: 25, velocity: 14, swing: 58, duration: 8, strength: 82 },
+            laidback: { timing: 18, velocity: 10, swing: 56, duration: 5, strength: 75 },
+            driving: { timing: 10, velocity: 11, swing: 52, duration: 3, strength: 74 },
+        };
+
+        function applyFeelPreset() {
+            const val = $('feelPreset').value;
+            if (val === 'custom') return;
+            const p = FEEL_PRESETS[val];
+            if (!p) return;
+            $('humTiming').value = p.timing;
+            $('humVelocity').value = p.velocity;
+            $('humSwing').value = p.swing;
+            $('humDuration').value = p.duration;
+            $('humStrength').value = p.strength;
+            humOut('humTiming', '', ' ms');
+            humOut('humVelocity', '±');
+            humOut('humSwing', '', '%');
+            humOut('humDuration', '±', '%');
+            humOut('humStrength', '', '%');
+        }
+
+        function markHumCustom() {
+            $('feelPreset').value = 'custom';
+        }
+
+        function mulberry32(seed) {
+            let a = seed >>> 0;
+            return () => {
+                a |= 0; a = a + 0x6D2B79F5 | 0;
+                let t = Math.imul(a ^ a >>> 15, 1 | a);
+                t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+                return ((t ^ t >>> 14) >>> 0) / 4294967296;
+            };
+        }
+
+        function randNormal(rng) {
+            let u = 0, v = 0;
+            while (!u) u = rng();
+            while (!v) v = rng();
+            return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+        }
+
+        function tempoAtTick(tick) {
+            const map = (state.tempoMap && state.tempoMap.length) ? state.tempoMap : [{ tick: 0, tempo: 500000 }];
+            let t = map[0];
+            for (const x of map) { if (x.tick <= tick) t = x; else break; }
+            return t.tempo;
+        }
+
+        function runHumanize() {
+            if (!state.notes || state.notes.length === 0) {
+                showModal('No Data', 'Please load a MIDI file first');
+                return;
+            }
+
+            const ppq = state.ppq || 480;
+            const rng = mulberry32(parseInt($('humSeed').value, 10) || 1);
+            const strength = parseInt($('humStrength').value, 10) / 100;
+            const timingMs = parseInt($('humTiming').value, 10) * strength;
+            const velAmt = parseInt($('humVelocity').value, 10) * strength;
+            const durPct = parseInt($('humDuration').value, 10) / 100 * strength;
+            const swingPct = parseInt($('humSwing').value, 10);
+            const feel = $('feelPreset').value;
+            const protectDrumsOn = $('humProtectDrums').checked;
+            const protectBassOn = $('humProtectBass').checked;
+            const keepChords = $('humKeepChords').checked;
+            const avoidOverlaps = $('humAvoidOverlaps').checked;
+            const accentBeats = $('humAccentBeats').checked;
+            const preserveStarts = $('humPreserveStarts').checked;
+
+            const msToTicks = (tick, ms) => ms * ppq * 1000 / tempoAtTick(tick);
+
+            pushUndo();
+
+            const notes = state.notes
+                .filter(n => !state.lockedTracks.has(n.track))
+                .map(n => ({ ...n }));
+            const lockedNotes = state.notes.filter(n => state.lockedTracks.has(n.track));
+
+            const chordWindow = Math.max(1, Math.round(ppq / 32));
+            const groups = new Map();
+            for (const n of notes) {
+                const bucket = Math.round(n.start / chordWindow);
+                const key = `${n.track}:${n.channel}:${bucket}`;
+                if (!groups.has(key)) groups.set(key, []);
+                groups.get(key).push(n);
+            }
+            const groupOffset = new Map();
+            for (const key of groups.keys()) groupOffset.set(key, randNormal(rng));
+
+            let changedTiming = 0, changedVelocity = 0, changedDuration = 0, protectedCount = 0;
+
+            for (const n of notes) {
+                const isBass = n.channel !== 9 && n.note < 48;
+                const protectDrum = n.channel === 9 && protectDrumsOn;
+                const protectBass = isBass && protectBassOn;
+                const scale = protectDrum ? 0.22 : protectBass ? 0.55 : 1;
+                if (protectDrum || protectBass) protectedCount++;
+
+                const bucket = Math.round(n.start / chordWindow);
+                const key = `${n.track}:${n.channel}:${bucket}`;
+                let noise = keepChords ? groupOffset.get(key) : randNormal(rng);
+                noise *= scale;
+
+                let offsetTicks = msToTicks(n.start, timingMs) * noise;
+                const eighth = ppq / 2;
+                const eighthIndex = Math.round(n.start / eighth);
+                if (eighthIndex % 2 === 1) {
+                    const targetDelay = (swingPct - 50) / 50 * eighth;
+                    offsetTicks += targetDelay * strength * scale;
+                }
+                if (feel === 'laidback') offsetTicks += msToTicks(n.start, 8) * strength * scale;
+                if (feel === 'driving') offsetTicks -= msToTicks(n.start, 5) * strength * scale;
+                if (preserveStarts && n.start < ppq / 16) offsetTicks = Math.max(0, offsetTicks);
+
+                const newStart = Math.max(0, Math.round(n.start + offsetTicks));
+                if (newStart !== n.start) changedTiming++;
+
+                let vel = n.velocity + randNormal(rng) * velAmt * scale;
+                if (accentBeats) {
+                    const beat = Math.round(n.start / ppq);
+                    const dist = Math.abs(n.start - beat * ppq);
+                    if (dist < ppq / 24) vel += 5 * strength;
+                    else {
+                        const half = Math.round(n.start / (ppq / 2));
+                        if (Math.abs(n.start - half * ppq / 2) < ppq / 24) vel += 2 * strength;
+                    }
+                }
+                vel = Math.round(Math.max(1, Math.min(127, vel)));
+                if (vel !== n.velocity) changedVelocity++;
+
+                let newDur = Math.max(1, Math.round(n.duration * (1 + randNormal(rng) * durPct * scale)));
+                if (newDur !== n.duration) changedDuration++;
+
+                n.start = newStart;
+                n.velocity = vel;
+                n.duration = newDur;
+                n.end = newStart + newDur;
+            }
+
+            if (avoidOverlaps) {
+                const byVoice = new Map();
+                for (const n of notes) {
+                    const key = `${n.track}:${n.channel}:${n.note}`;
+                    if (!byVoice.has(key)) byVoice.set(key, []);
+                    byVoice.get(key).push(n);
+                }
+                for (const arr of byVoice.values()) {
+                    arr.sort((a, b) => a.start - b.start);
+                    for (let i = 0; i < arr.length - 1; i++) {
+                        if (arr[i].end >= arr[i + 1].start) {
+                            arr[i].end = Math.max(arr[i].start + 1, arr[i + 1].start - 1);
+                            arr[i].duration = arr[i].end - arr[i].start;
+                        }
+                    }
+                }
+            }
+
+            state.notes = [...notes, ...lockedNotes].sort((a, b) => a.start - b.start);
+            state.isModified = true;
+            refreshCounts();
+
+            $('humanizeInfo').textContent = `Timing: ${changedTiming}, Velocity: ${changedVelocity}, Duration: ${changedDuration} changed` +
+                (protectedCount ? ` (${protectedCount} protected)` : '') +
+                (lockedNotes.length ? ` — ${lockedNotes.length} locked notes skipped` : '');
+            renderPianoRoll();
+            setStatus(`✅ Humanized — ${changedTiming} timing, ${changedVelocity} velocity changes`, 'success');
+            setTimeout(analyzeHarmony, 100);
+        }
+
+        // ---- Match Reference Groove (ported from MIDI Groove Extractor Pro) ----
+        function chooseGrooveStep(barTick, stepTicks, stepCount) {
+            const beatTicks = stepTicks * 4;
+            const nearest16 = Math.round(barTick / stepTicks);
+            const nearest8 = Math.round(barTick / (stepTicks * 2)) * 2;
+            const dist8 = Math.abs(barTick - nearest8 * stepTicks);
+            const eighthTolerance = beatTicks * 0.22;
+            const chosen = dist8 <= eighthTolerance ? nearest8 : nearest16;
+            return ((chosen % stepCount) + stepCount) % stepCount;
+        }
+
+        function analyzeGrooveFromNotes(notes, ppq) {
+            if (!notes.length) throw new Error('No notes found in reference file.');
+            const ticksPerBar = ppq * 4;
+            const stepsPerBar = 16;
+            const stepTicks = ticksPerBar / stepsPerBar;
+            const profile = [];
+            for (let i = 0; i < stepsPerBar; i++) profile.push({ offsets: [], velocities: [], hits: 0 });
+
+            for (const n of notes) {
+                const bar = Math.floor(n.start / ticksPerBar);
+                const barTick = n.start - bar * ticksPerBar;
+                const step = chooseGrooveStep(barTick, stepTicks, stepsPerBar);
+                const gridTick = step * stepTicks;
+                const offset = n.start - (bar * ticksPerBar + gridTick);
+                profile[step].offsets.push(offset);
+                profile[step].velocities.push(n.velocity);
+                profile[step].hits++;
+            }
+
+            const stepData = profile.map(s => {
+                let medOff = 0;
+                if (s.offsets.length) {
+                    const sorted = s.offsets.slice().sort((a, b) => a - b);
+                    medOff = sorted[Math.floor(sorted.length / 2)];
+                }
+                let avgVel = 0;
+                if (s.velocities.length) {
+                    const sorted = s.velocities.slice().sort((a, b) => a - b);
+                    const trim = sorted.length >= 10 ? Math.floor(sorted.length * 0.1) : 0;
+                    const trimmed = sorted.slice(trim, sorted.length - trim || sorted.length);
+                    avgVel = trimmed.reduce((a, b) => a + b, 0) / trimmed.length;
+                }
+                return { offset: medOff, avgVel, hits: s.velocities.length };
+            });
+
+            let swingSum = 0, swingCount = 0;
+            for (let beat = 0; beat < 4; beat++) {
+                const onStep = beat * 4, offStep = beat * 4 + 2;
+                if (stepData[offStep].hits > 0 && stepData[onStep].hits > 0) {
+                    const actualOff = stepTicks * 2 + stepData[offStep].offset - stepData[onStep].offset;
+                    const ratio = actualOff / (stepTicks * 4) * 100;
+                    swingSum += Math.max(0, Math.min(100, ratio));
+                    swingCount++;
+                }
+            }
+            const swingPercent = swingCount > 0 ? (swingSum / swingCount) : 50;
+
+            for (let i = 0; i < stepData.length; i++) {
+                if (stepData[i].hits > 0) continue;
+                const sameSubdivision = stepData.map((s, idx) => ({ s, idx })).filter(x => x.s.hits > 0 && (x.idx % 4) === (i % 4));
+                let donor = null;
+                if (sameSubdivision.length) {
+                    donor = sameSubdivision.reduce((best, x) => !best || Math.abs(x.idx - i) < Math.abs(best.idx - i) ? x : best, null);
+                } else {
+                    const populated = stepData.map((s, idx) => ({ s, idx })).filter(x => x.s.hits > 0);
+                    donor = populated.reduce((best, x) => !best || Math.abs(x.idx - i) < Math.abs(best.idx - i) ? x : best, null);
+                }
+                if (donor) stepData[i] = { ...stepData[i], offset: donor.s.offset, avgVel: donor.s.avgVel, inferred: true };
+            }
+
+            const swingDelay = (swingPercent / 100 * ppq) - (ppq / 2);
+            for (let beat = 0; beat < 4; beat++) {
+                const off8 = beat * 4 + 2;
+                if (Math.abs(stepData[off8].offset) < 1 && Math.abs(swingDelay) >= 1) {
+                    stepData[off8].offset = swingDelay;
+                    stepData[off8].inferred = true;
+                }
+            }
+
+            let sumSq = 0, count = 0;
+            for (const s of stepData) { if (s.hits > 0) { sumSq += s.offset * s.offset; count++; } }
+            const rmsOffsetTicks = count ? Math.sqrt(sumSq / count) : 0;
+            const refTicksPerSec = ppq * 2; // 120 BPM reference
+            let grooveMagnitudeMs = rmsOffsetTicks / refTicksPerSec * 1000;
+
+            let normalized = false, warning = '';
+            const MIN_MAGNITUDE_MS = 3, TARGET_MAGNITUDE_MS = 12;
+            if (grooveMagnitudeMs > 0.01 && grooveMagnitudeMs < MIN_MAGNITUDE_MS) {
+                const scale = TARGET_MAGNITUDE_MS / grooveMagnitudeMs;
+                for (const s of stepData) { if (s.hits > 0 || s.inferred) s.offset = Math.round(s.offset * scale); }
+                normalized = true;
+                warning = `Source groove was very weak (${grooveMagnitudeMs.toFixed(1)} ms RMS) — normalized to ~${TARGET_MAGNITUDE_MS} ms.`;
+                grooveMagnitudeMs = TARGET_MAGNITUDE_MS;
+            } else if (grooveMagnitudeMs <= 0.01) {
+                warning = 'Reference has minimal timing variation — extracted groove will be nearly inaudible.';
+            }
+
+            return { ticksPerBar, stepTicks, profile: stepData, swingPercent, totalNotes: notes.length,
+                avgVelocity: notes.reduce((s, n) => s + n.velocity, 0) / notes.length, stepCount: stepsPerBar,
+                grooveMagnitudeMs, normalized, warning };
+        }
+
+        async function loadReferenceFile(file) {
+            try {
+                const buffer = await file.arrayBuffer();
+                const result = MIDIParser.parse(buffer);
+                state.refGroove = analyzeGrooveFromNotes(result.notes.filter(n => n.channel !== 9), result.ppq);
+                $('refStatus').textContent = `✅ ${file.name}`;
+                $('refStatus').className = 'file-status ok';
+                $('refGrooveInfo').textContent = `Swing: ${state.refGroove.swingPercent.toFixed(1)}% | Groove: ${state.refGroove.grooveMagnitudeMs.toFixed(1)}ms | ${state.refGroove.totalNotes} notes` +
+                    (state.refGroove.warning ? `\n⚠️ ${state.refGroove.warning}` : '');
+                $('applyGrooveBtn').disabled = !(state.notes && state.notes.length);
+            } catch (err) {
+                $('refStatus').textContent = `❌ Error: ${err.message}`;
+                $('refStatus').className = 'file-status missing';
+                state.refGroove = null;
+                $('applyGrooveBtn').disabled = true;
+            }
+        }
+
+        function applyGroove() {
+            if (!state.notes || state.notes.length === 0) {
+                showModal('No Data', 'Please load a MIDI file first');
+                return;
+            }
+            if (!state.refGroove) {
+                showModal('No Reference', 'Please load a reference MIDI file first');
+                return;
+            }
+
+            const ppq = state.ppq || 480;
+            const bpm = 60000000 / tempoAtTick(0);
+            const ticksPerSecond = ppq * (bpm / 60);
+            const timingStr = parseInt($('grooveTimingStr').value, 10);
+            const velStr = parseInt($('grooveVelocityStr').value, 10);
+            const mode = $('grooveModeSelect').value;
+            const preserveChords = $('groovePreserveChords').checked;
+            const preserveBass = $('groovePreserveBass').checked;
+            const drumAware = $('grooveDrumAware').checked;
+            const maxShiftMs = 60, bassMaxShiftMs = 25;
+            const maxShiftTicks = Math.round(maxShiftMs / 1000 * ticksPerSecond);
+            const bassMaxShiftTicks = Math.round(bassMaxShiftMs / 1000 * ticksPerSecond);
+            const tFactor = Math.max(0, Math.min(1, timingStr / 100));
+            const profile = state.refGroove;
+
+            function isBass(n) {
+                if (n.channel === 9) return false;
+                if (drumAware) return false; // avoids misreading low drum notes on non-ch.10 tracks as "bass"
+                return n.channel === 1 || n.note < 48;
+            }
+
+            function applyTiming(tick, isBassFlag) {
+                const bar = Math.floor(tick / profile.ticksPerBar);
+                const barTick = tick - bar * profile.ticksPerBar;
+                const step = chooseGrooveStep(barTick, profile.stepTicks, profile.stepCount);
+                const gridTick = step * profile.stepTicks;
+                const sourceOffset = Number(profile.profile[step]?.offset || 0);
+                const absoluteGrid = bar * profile.ticksPerBar + gridTick;
+                const desiredTick = absoluteGrid + sourceOffset;
+                const rawShift = desiredTick - tick;
+                const shift = rawShift * tFactor;
+                const cap = (preserveBass && isBassFlag) ? bassMaxShiftTicks : maxShiftTicks;
+                return Math.max(0, tick + Math.max(-cap, Math.min(cap, shift)));
+            }
+
+            function applyVelocity(vel, tick) {
+                const bar = Math.floor(tick / profile.ticksPerBar);
+                const barTick = tick - bar * profile.ticksPerBar;
+                const step = chooseGrooveStep(barTick, profile.stepTicks, profile.stepCount);
+                const avg = profile.profile[step].avgVel;
+                if (avg === 0) return vel;
+                const diff = avg - profile.avgVelocity;
+                return Math.max(1, Math.min(127, Math.round(vel + diff * (velStr / 100))));
+            }
+
+            pushUndo();
+
+            const targetNotes = state.notes.filter(n => !state.lockedTracks.has(n.track));
+            const lockedNotes = state.notes.filter(n => state.lockedTracks.has(n.track));
+
+            // Chord groups: same track/channel, starts within stepTicks/4 of each other
+            const chordGroups = [];
+            if (preserveChords) {
+                const byTrackChannel = new Map();
+                for (const n of targetNotes) {
+                    const key = `${n.track}:${n.channel}`;
+                    if (!byTrackChannel.has(key)) byTrackChannel.set(key, []);
+                    byTrackChannel.get(key).push(n);
+                }
+                for (const list of byTrackChannel.values()) {
+                    const sorted = list.slice().sort((a, b) => a.start - b.start);
+                    let current = [];
+                    for (const n of sorted) {
+                        if (current.length === 0 || n.start - current[0].start < profile.stepTicks / 4) {
+                            current.push(n);
+                        } else {
+                            if (current.length > 1) chordGroups.push(current);
+                            current = [n];
+                        }
+                    }
+                    if (current.length > 1) chordGroups.push(current);
+                }
+            }
+            const grouped = new Set();
+            for (const group of chordGroups) for (const n of group) grouped.add(n);
+
+            let movedNotes = 0, velocityChanged = 0;
+
+            for (const group of chordGroups) {
+                const earliest = group.reduce((min, n) => n.start < min.start ? n : min, group[0]);
+                const isBassGroup = group.some(n => isBass(n));
+                const avgVel = group.reduce((s, n) => s + n.velocity, 0) / group.length;
+                let shift = 0, velShift = 0;
+                if (mode === 'timing' || mode === 'both') shift = applyTiming(earliest.start, isBassGroup) - earliest.start;
+                if (mode === 'velocity' || mode === 'both') velShift = applyVelocity(avgVel, earliest.start) - avgVel;
+                for (const n of group) {
+                    if (shift) { n.start = Math.max(0, Math.round(n.start + shift)); n.end = n.start + n.duration; movedNotes++; }
+                    if (velShift) { const nv = Math.max(1, Math.min(127, Math.round(n.velocity + velShift))); if (nv !== n.velocity) velocityChanged++; n.velocity = nv; }
+                }
+            }
+
+            for (const n of targetNotes) {
+                if (grouped.has(n)) continue;
+                if (mode === 'timing' || mode === 'both') {
+                    const newStart = Math.round(applyTiming(n.start, isBass(n)));
+                    if (newStart !== n.start) { n.end = newStart + n.duration; n.start = newStart; movedNotes++; }
+                }
+                if (mode === 'velocity' || mode === 'both') {
+                    const newVel = applyVelocity(n.velocity, n.start);
+                    if (newVel !== n.velocity) velocityChanged++;
+                    n.velocity = newVel;
+                }
+            }
+
+            state.notes = [...targetNotes, ...lockedNotes].sort((a, b) => a.start - b.start);
+            state.isModified = true;
+            refreshCounts();
+
+            $('grooveApplyInfo').textContent = `Moved: ${movedNotes}, Velocity changed: ${velocityChanged}` +
+                (lockedNotes.length ? ` — ${lockedNotes.length} locked notes skipped` : '');
+            renderPianoRoll();
+            setStatus(`✅ Groove applied — ${movedNotes} notes moved`, 'success');
+            setTimeout(analyzeHarmony, 100);
+        }
+
         // ---- Clean / Restore presets ----
         const CLEAN_PRESETS = {
             minimal: { modDuplicate: true, modHanging: true, modOverlap: true, modGhost: true, modMerge: false, modPitch: false, modTiming: false, modVelocity: false },
@@ -2765,11 +3277,12 @@
                 '• Generate Harmony: Thirds, Sixths, Octave\n' +
                 '  Up/Down, and 3-part Choir (SATB) voicing —\n' +
                 '  adds real new MIDI tracks you can export\n' +
-                '• Clean / Restore: removes duplicate/ghost\n' +
-                '  notes, repairs hanging notes & overlaps,\n' +
-                '  merges fragments, fixes pitch flicker,\n' +
-                '  quantizes timing, smooths velocity, and\n' +
-                '  can snap notes to the selected key\n' +
+                '• Humanize: seeded random timing/velocity/\n' +
+                '  duration variation with Feel presets, chord-\n' +
+                '  aware grouping, and drum/bass protection\n' +
+                '• Match Reference Groove: extracts the swing/\n' +
+                '  timing/velocity profile from a reference MIDI\n' +
+                '  and imprints it on your melody\n' +
                 '• Per-channel color-coded piano roll\n' +
                 '• Undo/Redo (including generated tracks)\n' +
                 '• Lock tracks feature (enforced)\n' +
