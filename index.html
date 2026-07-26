@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MIDI Melody & Harmony Studio v3.0</title>
+    <title>MIDI Melody & Harmony Studio v3.1</title>
     <style>
         /* ===== CSS VARIABLES & RESET ===== */
         :root {
@@ -798,33 +798,35 @@
         // ============================================================
 
         function readVarLen(data, pos) {
+            // MIDI VLQs are big-endian groups of seven bits. The old reader
+            // accumulated them little-endian, turning ordinary musical gaps
+            // (for example 480 ticks) into very large, incorrect delta times.
             let value = 0;
-            let shift = 0;
-            let b;
-            while (true) {
+            for (let count = 0; count < 4; count++) {
                 if (pos >= data.length) {
-                    return { value: 0, pos: pos, error: 'Unexpected end of data' };
+                    return { value: 0, pos, error: 'Unexpected end of data' };
                 }
-                b = data[pos++];
-                value |= (b & 0x7F) << shift;
-                shift += 7;
-                if (!(b & 0x80)) break;
-                if (shift > 28) { // safety
-                    return { value: 0, pos: pos, error: 'VLQ too long' };
-                }
+                const b = data[pos++];
+                value = (value << 7) | (b & 0x7F);
+                if ((b & 0x80) === 0) return { value, pos, error: null };
             }
-            return { value, pos, error: null };
+            return { value: 0, pos, error: 'VLQ too long' };
         }
 
         function writeVarLen(value) {
-            if (value < 0) value = 0;
+            // Build least-significant groups, then emit them most-significant
+            // first as required by the Standard MIDI File specification.
+            value = Math.max(0, Math.min(0x0FFFFFFF, Math.floor(Number(value) || 0)));
+            let buffer = value & 0x7F;
             const bytes = [];
+            while ((value >>= 7) > 0) {
+                buffer <<= 8;
+                buffer |= ((value & 0x7F) | 0x80);
+            }
             while (true) {
-                let b = value & 0x7F;
-                value >>= 7;
-                if (value > 0) b |= 0x80;
-                bytes.push(b);
-                if (value === 0) break;
+                bytes.push(buffer & 0xFF);
+                if (buffer & 0x80) buffer >>= 8;
+                else break;
             }
             return bytes;
         }
@@ -945,6 +947,7 @@
 
                         if (metaType === 0x03) { // Track name
                             trackName = new TextDecoder().decode(metaData);
+                            events.push({ tick: currentTick, type: 'track_name', text: trackName });
                         } else if (metaType === 0x51) { // Tempo
                             if (len >= 3) {
                                 const tempo = (metaData[0] << 16) | (metaData[1] << 8) | metaData[2];
@@ -962,7 +965,7 @@
                             if (len >= 2) {
                                 keySignatures.push({
                                     tick: currentTick,
-                                    key: metaData[0],
+                                    key: metaData[0] > 127 ? metaData[0] - 256 : metaData[0],
                                     scale: metaData[1]
                                 });
                             }
@@ -990,53 +993,64 @@
                         const key = `${trackIndex}|${channel}|${note}`;
 
                         if (type === 0x9 && velocity > 0) {
-                            activeNotes.set(key, {
+                            const stack = activeNotes.get(key) || [];
+                            stack.push({
                                 start: currentTick,
                                 velocity,
                                 channel,
                                 track: trackIndex,
                                 noteId: state.noteIdCounter++,
                             });
+                            activeNotes.set(key, stack);
                         } else {
-                            if (activeNotes.has(key)) {
-                                const active = activeNotes.get(key);
+                            const stack = activeNotes.get(key);
+                            if (stack && stack.length) {
+                                const active = stack.shift();
                                 notes.push({
                                     id: active.noteId,
                                     track: trackIndex,
-                                    channel: channel,
-                                    note: note,
+                                    channel,
+                                    note,
                                     start: active.start,
-                                    end: currentTick,
-                                    duration: currentTick - active.start,
+                                    end: Math.max(active.start + 1, currentTick),
+                                    duration: Math.max(1, currentTick - active.start),
                                     velocity: active.velocity,
                                 });
-                                activeNotes.delete(key);
+                                if (stack.length === 0) activeNotes.delete(key);
                             }
                         }
                     } else {
-                        // Other channel messages: skip data bytes
+                        // Preserve non-note channel events so exported files keep
+                        // instruments, sustain pedal, modulation, pitch bend, etc.
                         if (type === 0xC || type === 0xD) {
-                            if (pos < data.length) data[pos++];
+                            if (pos >= data.length) break;
+                            const data1 = data[pos++];
+                            events.push({ tick: currentTick, type: 'channel', status, data: [data1] });
                         } else {
-                            if (pos + 1 < data.length) { data[pos++];
-                                data[pos++]; }
+                            if (pos + 1 >= data.length) break;
+                            const data1 = data[pos++];
+                            const data2 = data[pos++];
+                            events.push({ tick: currentTick, type: 'channel', status, data: [data1, data2] });
                         }
                     }
                 }
 
                 // Handle hanging notes
-                for (const [key, active] of activeNotes) {
-                    notes.push({
-                        id: active.noteId,
-                        track: trackIndex,
-                        channel: active.channel,
-                        note: parseInt(key.split('|')[2]),
-                        start: active.start,
-                        end: currentTick,
-                        duration: currentTick - active.start,
-                        velocity: active.velocity,
-                        hanging: true,
-                    });
+                for (const [key, stack] of activeNotes) {
+                    for (const active of stack) {
+                        const end = Math.max(active.start + 1, currentTick);
+                        notes.push({
+                            id: active.noteId,
+                            track: trackIndex,
+                            channel: active.channel,
+                            note: parseInt(key.split('|')[2], 10),
+                            start: active.start,
+                            end,
+                            duration: end - active.start,
+                            velocity: active.velocity,
+                            hanging: true,
+                        });
+                    }
                 }
 
                 return { notes, events, name: trackName };
@@ -1083,17 +1097,52 @@
         // ============================================================
 
         class MIDIWriter {
-            static write(midiData, notes, ppq, tempoMap, timeSignatures, keySignatures, trackNames) {
-                // We need to preserve all events except note pitch/velocity modifications.
-                // We'll rebuild tracks from the original track data, applying note edits.
-                // For simplicity, we'll generate a new track with notes and tempo etc.
-                // This version preserves tracks by writing multiple tracks.
-                const header = this.writeHeader(0, 1, ppq);
-                const trackEvents = this.buildTrackEvents(notes, ppq, tempoMap, timeSignatures, keySignatures);
-                const trackData = this.writeTrack(trackEvents, ppq);
-                const result = new Uint8Array(header.length + trackData.length);
-                result.set(header, 0);
-                result.set(trackData, header.length);
+            static write(midiData, notes, ppq, tempoMap, timeSignatures, keySignatures, trackNames = [], sourceTracks = []) {
+                const safePPQ = Math.max(1, Math.min(0x7FFF, Math.round(ppq || 480)));
+                const notesByTrack = new Map();
+                for (const n of notes) {
+                    const track = Math.max(0, Math.round(n.track || 0));
+                    if (!notesByTrack.has(track)) notesByTrack.set(track, []);
+                    notesByTrack.get(track).push(n);
+                }
+
+                const sourceCount = sourceTracks.length;
+                const highestNoteTrack = notes.length ? Math.max(...notes.map(n => Math.max(0, Math.round(n.track || 0)))) : -1;
+                const musicalTrackCount = Math.max(sourceCount, highestNoteTrack + 1, 1);
+                const chunks = [];
+
+                // Format 1 conductor track: global timing/signature information.
+                chunks.push(this.writeTrack(this.buildConductorEvents(tempoMap, timeSignatures, keySignatures)));
+
+                for (let trackIndex = 0; trackIndex < musicalTrackCount; trackIndex++) {
+                    const events = [];
+                    const name = trackNames[trackIndex] || (trackIndex >= sourceCount ? `Harmony ${trackIndex - sourceCount + 1}` : `Track ${trackIndex + 1}`);
+                    events.push({ tick: 0, type: 'track_name', text: name });
+
+                    const preserved = sourceTracks[trackIndex]?.events || [];
+                    for (const ev of preserved) {
+                        if (ev.type === 'channel') events.push({ ...ev, data: [...ev.data] });
+                    }
+
+                    for (const n of notesByTrack.get(trackIndex) || []) {
+                        const start = Math.max(0, Math.round(n.start || 0));
+                        const duration = Math.max(1, Math.round(n.duration || ((n.end || start + 1) - start) || 1));
+                        const end = Math.max(start + 1, Math.round(n.end ?? (start + duration)));
+                        const channel = Math.max(0, Math.min(15, Math.round(n.channel || 0)));
+                        const note = Math.max(0, Math.min(127, Math.round(n.note || 0)));
+                        const velocity = Math.max(1, Math.min(127, Math.round(n.velocity || 1)));
+                        events.push({ tick: start, type: 'note_on', note, velocity, channel });
+                        events.push({ tick: end, type: 'note_off', note, velocity: 0, channel });
+                    }
+                    chunks.push(this.writeTrack(events));
+                }
+
+                const header = this.writeHeader(1, chunks.length, safePPQ);
+                const total = header.length + chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+                const result = new Uint8Array(total);
+                let offset = 0;
+                result.set(header, offset); offset += header.length;
+                for (const chunk of chunks) { result.set(chunk, offset); offset += chunk.length; }
                 return result;
             }
 
@@ -1108,102 +1157,56 @@
                 return data;
             }
 
-            static buildTrackEvents(notes, ppq, tempoMap, timeSignatures, keySignatures) {
+            static buildConductorEvents(tempoMap, timeSignatures, keySignatures) {
                 const events = [];
-                // Add tempo map events
-                for (const t of tempoMap) {
-                    events.push({
-                        tick: t.tick,
-                        type: 'tempo',
-                        tempo: t.tempo,
-                    });
-                }
-                // Add time signatures
-                for (const ts of timeSignatures) {
-                    events.push({
-                        tick: ts.tick,
-                        type: 'time_signature',
-                        numerator: ts.numerator,
-                        denominator: ts.denominator,
-                    });
-                }
-                // Add key signatures
-                for (const ks of keySignatures) {
-                    events.push({
-                        tick: ks.tick,
-                        type: 'key_signature',
-                        key: ks.key,
-                        scale: ks.scale,
-                    });
-                }
-                // Add note events
-                for (const n of notes) {
-                    events.push({
-                        tick: n.start,
-                        type: 'note_on',
-                        note: n.note,
-                        velocity: n.velocity,
-                        channel: n.channel || 0,
-                    });
-                    events.push({
-                        tick: n.end || n.start + 240,
-                        type: 'note_off',
-                        note: n.note,
-                        velocity: 0,
-                        channel: n.channel || 0,
-                    });
-                }
-                // Sort by tick
-                events.sort((a, b) => a.tick - b.tick || (a.type === 'note_off' ? -1 : 1));
+                for (const t of tempoMap || []) events.push({ tick: Math.max(0, Math.round(t.tick || 0)), type: 'tempo', tempo: t.tempo });
+                for (const ts of timeSignatures || []) events.push({ tick: Math.max(0, Math.round(ts.tick || 0)), type: 'time_signature', numerator: ts.numerator, denominator: ts.denominator });
+                for (const ks of keySignatures || []) events.push({ tick: Math.max(0, Math.round(ks.tick || 0)), type: 'key_signature', key: ks.key, scale: ks.scale });
+                if (!events.some(e => e.type === 'tempo' && e.tick === 0)) events.push({ tick: 0, type: 'tempo', tempo: 500000 });
                 return events;
             }
 
-            static writeTrack(events, ppq) {
-                const trackData = [];
+            static eventPriority(ev) {
+                if (ev.type === 'track_name') return 0;
+                if (ev.type === 'tempo' || ev.type === 'time_signature' || ev.type === 'key_signature') return 1;
+                if (ev.type === 'channel') return 2;
+                if (ev.type === 'note_off') return 3;
+                if (ev.type === 'note_on') return 4;
+                return 5;
+            }
+
+            static writeTrack(events) {
+                const bytes = [];
                 let currentTick = 0;
-
-                for (const ev of events) {
-                    const delta = ev.tick - currentTick;
-                    if (delta < 0) continue;
-                    trackData.push(...writeVarLen(delta));
-
+                const sorted = [...events].sort((a, b) => a.tick - b.tick || this.eventPriority(a) - this.eventPriority(b));
+                for (const ev of sorted) {
+                    const tick = Math.max(currentTick, Math.round(ev.tick || 0));
+                    bytes.push(...writeVarLen(tick - currentTick));
                     if (ev.type === 'tempo') {
-                        trackData.push(0xFF, 0x51, 0x03);
-                        const tempo = ev.tempo || 500000;
-                        trackData.push((tempo >> 16) & 0xFF);
-                        trackData.push((tempo >> 8) & 0xFF);
-                        trackData.push(tempo & 0xFF);
+                        const tempo = Math.max(1, Math.min(0xFFFFFF, Math.round(ev.tempo || 500000)));
+                        bytes.push(0xFF, 0x51, 0x03, (tempo >> 16) & 0xFF, (tempo >> 8) & 0xFF, tempo & 0xFF);
                     } else if (ev.type === 'time_signature') {
-                        trackData.push(0xFF, 0x58, 0x04);
-                        trackData.push(ev.numerator || 4);
-                        trackData.push(Math.log2(ev.denominator || 4));
-                        trackData.push(24);
-                        trackData.push(8);
+                        const denominator = Math.max(1, ev.denominator || 4);
+                        bytes.push(0xFF, 0x58, 0x04, Math.max(1, ev.numerator || 4) & 0xFF, Math.round(Math.log2(denominator)) & 0xFF, 24, 8);
                     } else if (ev.type === 'key_signature') {
-                        trackData.push(0xFF, 0x59, 0x02);
-                        trackData.push(ev.key || 0);
-                        trackData.push(ev.scale || 0);
+                        bytes.push(0xFF, 0x59, 0x02, (Math.max(-7, Math.min(7, Math.round(ev.key || 0))) + 256) & 0xFF, ev.scale ? 1 : 0);
+                    } else if (ev.type === 'track_name') {
+                        const text = new TextEncoder().encode(ev.text || '');
+                        bytes.push(0xFF, 0x03, ...writeVarLen(text.length), ...text);
+                    } else if (ev.type === 'channel') {
+                        bytes.push(ev.status & 0xFF, ...ev.data.map(v => v & 0x7F));
                     } else if (ev.type === 'note_on') {
-                        trackData.push(0x90 | (ev.channel & 0x0F));
-                        trackData.push(ev.note & 0x7F);
-                        trackData.push(Math.min(127, Math.max(0, ev.velocity)));
+                        bytes.push(0x90 | (ev.channel & 0x0F), ev.note & 0x7F, ev.velocity & 0x7F);
                     } else if (ev.type === 'note_off') {
-                        trackData.push(0x80 | (ev.channel & 0x0F));
-                        trackData.push(ev.note & 0x7F);
-                        trackData.push(0);
+                        bytes.push(0x80 | (ev.channel & 0x0F), ev.note & 0x7F, 0);
                     }
-                    currentTick = ev.tick;
+                    currentTick = tick;
                 }
-
-                // End of track
-                trackData.push(0x00, 0xFF, 0x2F, 0x00);
-
-                const header = new Uint8Array([0x4D, 0x54, 0x72, 0x6B, 0x00, 0x00, 0x00, 0x00]);
-                const result = new Uint8Array(header.length + trackData.length);
-                result.set(header, 0);
-                result.set(trackData, header.length);
-                const view = new DataView(result.buffer);
-                view.setUint32(4, trackData.length);
+                bytes.push(0x00, 0xFF, 0x2F, 0x00);
+                const result = new Uint8Array(8 + bytes.length);
+                result.set([0x4D, 0x54, 0x72, 0x6B], 0);
+                new DataView(result.buffer).setUint32(4, bytes.length);
+                result.set(bytes, 8);
                 return result;
             }
         }
@@ -2926,7 +2929,7 @@
                 const timeSignatures = state.timeSignatures || [];
                 const keySignatures = state.keySignatures || [];
 
-                const midiData = MIDIWriter.write(null, notes, ppq, tempoMap, timeSignatures, keySignatures);
+                const midiData = MIDIWriter.write(state.midiData, notes, ppq, tempoMap, timeSignatures, keySignatures, state.trackNames, state.tracks);
                 const blob = new Blob([midiData], { type: 'audio/midi' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -3231,7 +3234,7 @@
 
         function showHelp() {
             showModal('📖 Help',
-                'MIDI Melody & Harmony Studio v3.0\n' +
+                'MIDI Melody & Harmony Studio v3.1\n' +
                 '====================================\n\n' +
                 '1. Load a MIDI file (drag & drop or click)\n' +
                 '2. Optionally run "Clean & Restore" to fix\n' +
@@ -3260,7 +3263,7 @@
         }
 
         function showAbout() {
-            showModal('🎵 Melody & Harmony Studio v3.0',
+            showModal('🎵 Melody & Harmony Studio v3.1',
                 'A professional tool for analyzing, improving, and\n' +
                 'harmonizing MIDI melodies and chord sequences.\n\n' +
                 'v3.0 Improvements:\n' +
@@ -3341,8 +3344,8 @@
         function init() {
             initFileHandling();
             renderPianoRoll();
-            setStatus('🎵 Melody & Harmony Studio v3.0 — Load a MIDI file to analyze', '');
-            console.log('🎵 Melody & Harmony Studio v3.0 loaded');
+            setStatus('🎵 Melody & Harmony Studio v3.1 — Load a MIDI file to analyze', '');
+            console.log('🎵 Melody & Harmony Studio v3.1 loaded');
             console.log('📖 Press H for help');
             console.log('⌨️ Space=Play, A=Analyze, E=Export, X=Apply All, Z=Reset, U=Undo, R=Redo');
         }
