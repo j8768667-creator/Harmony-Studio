@@ -1,608 +1,302 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Harmonix - Audio Slicer</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>AI Lyric-to-MIDI Melody Generator</title>
   <style>
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #0f172a; }
-    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
-    canvas { touch-action: none; }
+    :root {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --accent: #6366f1;
+      --accent-hover: #4f46e5;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #334155;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      padding: 2rem;
+      min-height: 100vh;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      color: var(--text-main);
+      margin-bottom: 0.5rem;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    select, textarea, input {
+      background-color: var(--bg-color);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 0.75rem;
+      border-radius: 6px;
+      font-size: 1rem;
+      outline: none;
+    }
+
+    select:focus, textarea:focus {
+      border-color: var(--accent);
+    }
+
+    textarea {
+      width: 100%;
+      height: 120px;
+      resize: vertical;
+    }
+
+    .btn {
+      background-color: var(--accent);
+      color: white;
+      border: none;
+      padding: 0.85rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      width: 100%;
+    }
+
+    .btn:hover {
+      background-color: var(--accent-hover);
+    }
+
+    .results {
+      display: none;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .results.active {
+      display: flex;
+    }
+
+    .midi-visualizer {
+      height: 120px;
+      background-color: var(--bg-color);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding: 0 1rem;
+    }
+
+    /* Simulated Piano Roll Notes */
+    .note-bar {
+      width: 8%;
+      background: linear-gradient(180deg, #818cf8 0%, var(--accent) 100%);
+      border-radius: 4px;
+      animation: pulse 1.5s infinite alternate;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 0.7; }
+      100% { opacity: 1; }
+    }
+
+    .audio-player-container {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    audio {
+      width: 100%;
+      border-radius: 6px;
+    }
+
+    .download-group {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .btn-secondary {
+      background-color: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--border-color);
+    }
+
+    .status-badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      background-color: #10b98120;
+      color: #10b981;
+      border: 1px solid #10b98140;
+      width: fit-content;
+      margin-bottom: 0.5rem;
+    }
   </style>
 </head>
-<body class="h-screen w-screen bg-slate-950 text-slate-100 flex flex-col font-sans overflow-hidden select-none">
+<body>
 
-  <header class="h-16 border-b border-slate-800 bg-slate-900 px-6 flex items-center justify-between shrink-0">
-    <div class="flex items-center gap-3">
-      <div class="bg-indigo-600 p-2 rounded-lg text-white font-bold">✂</div>
-      <div>
-        <h1 class="font-extrabold text-lg tracking-wide text-indigo-400">HARMONIX</h1>
-        <p class="text-xs text-slate-400 font-medium">Audio & MIDI Harmony Slicer</p>
+  <div class="container">
+    <header>
+      <h1>Lyric-to-MIDI Generator</h1>
+      <p>On-Device AI Pitch & Rhythm Synthesis Engine</p>
+    </header>
+
+    <div class="card">
+      <div class="status-badge">⚡ Lightweight Model Loaded (On-Device)</div>
+      
+      <div class="controls-grid">
+        <div class="form-group">
+          <label for="scale">Target Scale</label>
+          <select id="scale">
+            <option value="auto">Auto-Detect Mood</option>
+            <option value="c-major">C Major</option>
+            <option value="a-minor">A Minor</option>
+            <option value="f-major">F Major</option>
+            <option value="e-minor">E Minor</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="tempo">Tempo (BPM)</label>
+          <input type="number" id="tempo" value="120" min="60" max="200">
+        </div>
+
+        <div class="form-group">
+          <label for="vocal-style">Guide Vocal Model</label>
+          <select id="vocal-style">
+            <option value="pop-female">Pop Female (Fast Synth)</option>
+            <option value="indie-male">Indie Male (Fast Synth)</option>
+            <option value="robot-neutral">Neutral Synth</option>
+          </select>
+        </div>
       </div>
+
+      <div class="form-group" style="margin-bottom: 1.25rem;">
+        <label for="lyrics">Enter Lyrics</label>
+        <textarea id="lyrics" placeholder="Type your lyrics here...&#10;e.g., Walking through the rain late at night"></textarea>
+      </div>
+
+      <button class="btn" id="generate-btn" onclick="generateMelody()">Generate MIDI & Audio</button>
     </div>
 
-    <div class="flex items-center gap-3">
-      <button id="loadDemoBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer">
-        ✨ Generate Sample Audio
-      </button>
+    <div class="card results" id="results-card">
+      <h3>Generated Melody Output</h3>
+      
+      <div class="form-group">
+        <label>Piano Roll Preview</label>
+        <div class="midi-visualizer">
+          <div class="note-bar" style="height: 40%;"></div>
+          <div class="note-bar" style="height: 60%;"></div>
+          <div class="note-bar" style="height: 35%;"></div>
+          <div class="note-bar" style="height: 80%;"></div>
+          <div class="note-bar" style="height: 65%;"></div>
+          <div class="note-bar" style="height: 50%;"></div>
+          <div class="note-bar" style="height: 75%;"></div>
+        </div>
+      </div>
 
-      <label class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg cursor-pointer transition-all text-sm font-semibold shadow-lg">
-        📁 Import File
-        <input type="file" id="fileInput" accept=".wav,audio/wav,.mid,.midi" class="hidden" />
-      </label>
-      <span id="fileBadge" class="text-xs font-mono bg-indigo-950 text-indigo-300 border border-indigo-800 px-2.5 py-1 rounded-full">
-        No Sample Loaded
-      </span>
+      <div class="audio-player-container">
+        <label>Synthesized Guide Vocal (.WAV)</label>
+        <audio controls id="audio-player">
+          <source src="" type="audio/wav">
+          Your browser does not support the audio element.
+        </audio>
+      </div>
+
+      <div class="download-group">
+        <button class="btn btn-secondary" onclick="alert('Exporting .MID file...')">Download MIDI (.mid)</button>
+        <button class="btn btn-secondary" onclick="alert('Exporting .WAV file...')">Download Vocal (.wav)</button>
+      </div>
     </div>
-  </header>
-
-  <div class="flex flex-1 overflow-hidden">
-
-    <main class="flex-1 bg-slate-950 flex flex-col relative overflow-hidden">
-      
-      <div class="absolute top-4 left-4 right-4 flex items-center justify-between z-10 pointer-events-none">
-        <div class="flex items-center gap-2 bg-slate-900/90 border border-slate-800 p-1.5 rounded-lg pointer-events-auto shadow-xl">
-          <button id="detectTransientsBtn" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded transition cursor-pointer">
-            🪄 Auto Slice
-          </button>
-          <button id="clearSlicesBtn" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-rose-400 text-xs font-semibold rounded transition cursor-pointer">
-            🗑 Clear
-          </button>
-        </div>
-        
-        <div class="bg-slate-900/90 border border-slate-800 px-3 py-1.5 rounded-lg text-xs font-mono text-slate-400 pointer-events-auto shadow-xl">
-          Click canvas / pad to preview slice. Double-click line to delete.
-        </div>
-      </div>
-
-      <div id="canvasContainer" class="flex-1 w-full relative cursor-crosshair">
-        <canvas id="visualCanvas" class="absolute inset-0 w-full h-full"></canvas>
-      </div>
-
-      <div class="h-24 border-t border-slate-800 bg-slate-900/80 p-3 flex flex-col gap-1.5 shrink-0">
-        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Slice Trigger Pads</span>
-        <div id="slicePadsContainer" class="flex items-center gap-2 overflow-x-auto pb-1">
-          </div>
-      </div>
-    </main>
-
-    <aside class="w-80 border-l border-slate-800 bg-slate-900/50 p-5 flex flex-col gap-6 shrink-0 overflow-y-auto">
-      
-      <div>
-        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Harmony Intervals</h2>
-        <div class="space-y-2.5">
-          <label class="flex items-center justify-between p-2.5 bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 rounded-lg cursor-pointer">
-            <div class="flex items-center gap-2.5">
-              <input type="checkbox" id="harm3rd" class="accent-indigo-500 w-4 h-4" checked />
-              <span class="text-sm font-medium text-slate-200">+3rd (Major)</span>
-            </div>
-            <span class="text-xs font-mono text-slate-400">+4st</span>
-          </label>
-
-          <label class="flex items-center justify-between p-2.5 bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 rounded-lg cursor-pointer">
-            <div class="flex items-center gap-2.5">
-              <input type="checkbox" id="harm5th" class="accent-indigo-500 w-4 h-4" checked />
-              <span class="text-sm font-medium text-slate-200">+5th (Perfect)</span>
-            </div>
-            <span class="text-xs font-mono text-slate-400">+7st</span>
-          </label>
-
-          <label class="flex items-center justify-between p-2.5 bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 rounded-lg cursor-pointer">
-            <div class="flex items-center gap-2.5">
-              <input type="checkbox" id="harmOctave" class="accent-indigo-500 w-4 h-4" />
-              <span class="text-sm font-medium text-slate-200">-1 Octave</span>
-            </div>
-            <span class="text-xs font-mono text-slate-400">-12st</span>
-          </label>
-        </div>
-      </div>
-
-      <hr class="border-slate-800" />
-
-      <div class="space-y-4">
-        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400">Engine Settings</h2>
-        <div>
-          <div class="flex justify-between text-xs text-slate-400 mb-1">
-            <span>Dry / Harmony Mix</span>
-            <span id="mixValue" class="font-mono text-indigo-400">50%</span>
-          </div>
-          <input type="range" id="mixSlider" min="0" max="1" step="0.01" value="0.5" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500" />
-        </div>
-
-        <div>
-          <div class="flex justify-between text-xs text-slate-400 mb-1">
-            <span>Transient Sensitivity</span>
-            <span id="threshValue" class="font-mono text-indigo-400">0.08</span>
-          </div>
-          <input type="range" id="threshSlider" min="0.01" max="0.3" step="0.01" value="0.08" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500" />
-        </div>
-      </div>
-    </aside>
   </div>
 
-  <footer class="h-20 border-t border-slate-800 bg-slate-900 px-6 flex items-center justify-between shrink-0">
-    <div class="w-32 font-mono text-sm text-slate-400">
-      <span id="currentTime">00:00.00</span>
-    </div>
-
-    <div class="flex items-center gap-3">
-      <button id="stopBtn" class="p-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-full shadow transition cursor-pointer">⏹</button>
-      <button id="playBtn" class="p-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full shadow-lg transition cursor-pointer">▶</button>
-      <button id="loopBtn" class="p-3 bg-slate-800 text-slate-400 hover:text-slate-200 rounded-full shadow transition cursor-pointer">🔁</button>
-    </div>
-
-    <button id="exportBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm px-4 py-2.5 rounded-lg shadow transition cursor-pointer">
-      ⬇ Export WAV
-    </button>
-  </footer>
-
   <script>
-    const state = {
-      fileType: 'wav',
-      audioBuffer: null,
-      slices: [0],
-      isPlaying: false,
-      isLooping: false,
-      playhead: 0,
-      draggedSliceIndex: null,
-      harmonies: { h3rd: true, h5th: true, hOctave: false },
-      mix: 0.5,
-      threshold: 0.08,
-      duration: 0
-    };
+    function generateMelody() {
+      const lyrics = document.getElementById('lyrics').value.trim();
+      const btn = document.getElementById('generate-btn');
+      const resultsCard = document.getElementById('results-card');
 
-    let audioCtx = null;
-    let activeNodes = [];
-    let animationFrameId = null;
-    let startTime = 0;
-    let pauseOffset = 0;
-
-    // DOM Elements
-    const fileInput = document.getElementById('fileInput');
-    const fileBadge = document.getElementById('fileBadge');
-    const canvas = document.getElementById('visualCanvas');
-    const ctx = canvas.getContext('2d');
-    const canvasContainer = document.getElementById('canvasContainer');
-    const slicePadsContainer = document.getElementById('slicePadsContainer');
-    const loadDemoBtn = document.getElementById('loadDemoBtn');
-
-    const playBtn = document.getElementById('playBtn');
-    const stopBtn = document.getElementById('stopBtn');
-    const loopBtn = document.getElementById('loopBtn');
-    const exportBtn = document.getElementById('exportBtn');
-    const detectTransientsBtn = document.getElementById('detectTransientsBtn');
-    const clearSlicesBtn = document.getElementById('clearSlicesBtn');
-
-    const mixSlider = document.getElementById('mixSlider');
-    const threshSlider = document.getElementById('threshSlider');
-    const mixValue = document.getElementById('mixValue');
-    const threshValue = document.getElementById('threshValue');
-    const harm3rd = document.getElementById('harm3rd');
-    const harm5th = document.getElementById('harm5th');
-    const harmOctave = document.getElementById('harmOctave');
-    const currentTimeDisplay = document.getElementById('currentTime');
-
-    function getAudioContext() {
-      if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
-      return audioCtx;
-    }
-
-    function resizeCanvas() {
-      if (!canvasContainer.clientWidth) return;
-      canvas.width = canvasContainer.clientWidth;
-      canvas.height = canvasContainer.clientHeight;
-      render();
-    }
-    window.addEventListener('resize', resizeCanvas);
-
-    // --- DEMO AUDIO CREATOR ---
-    function generateDemoAudio() {
-      const actx = getAudioContext();
-      const sampleRate = actx.sampleRate;
-      const duration = 3.0; 
-      const buffer = actx.createBuffer(1, sampleRate * duration, sampleRate);
-      const data = buffer.getChannelData(0);
-
-      const notes = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63];
-      const stepTime = duration / notes.length;
-
-      for (let i = 0; i < buffer.length; i++) {
-        const t = i / sampleRate;
-        const step = Math.floor(t / stepTime);
-        const localTime = t % stepTime;
-        const freq = notes[step % notes.length];
-
-        const env = Math.exp(-12 * localTime);
-        data[i] = Math.sin(2 * Math.PI * freq * localTime) * env * 0.5;
+      if (!lyrics) {
+        alert('Please enter some lyrics first.');
+        return;
       }
 
-      state.audioBuffer = buffer;
-      state.fileType = 'wav';
-      state.duration = duration;
-      fileBadge.textContent = "Demo Audio Active";
+      // Indicate loading state
+      btn.textContent = 'Processing Prosody & Generating...';
+      btn.disabled = true;
 
-      autoDetectTransients();
-    }
-
-    loadDemoBtn.addEventListener('click', () => {
-      stopPlayback();
-      generateDemoAudio();
-    });
-
-    // --- FILE UPLOAD ---
-    fileInput.addEventListener('change', async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      stopPlayback();
-      try {
-        const arrayBuffer = await file.arrayBuffer();
-        const actx = getAudioContext();
-        state.audioBuffer = await actx.decodeAudioData(arrayBuffer);
-        state.fileType = 'wav';
-        state.duration = state.audioBuffer.duration;
-
-        fileBadge.textContent = file.name.substring(0, 16) + '...';
-        state.playhead = 0;
-        pauseOffset = 0;
-        autoDetectTransients();
-      } catch (err) {
-        alert('Could not process audio file.');
-      }
-    });
-
-    // --- AUTO SLICE ENGINE ---
-    function autoDetectTransients() {
-      if (!state.audioBuffer) return;
-      const data = state.audioBuffer.getChannelData(0);
-      const windowSize = Math.floor(state.audioBuffer.sampleRate * 0.03);
-      let detectedSlices = [0];
-
-      let prevEnergy = 0;
-      for (let i = 0; i < data.length; i += windowSize) {
-        let sum = 0;
-        for (let j = 0; j < windowSize && (i + j) < data.length; j++) {
-          sum += Math.abs(data[i + j]);
-        }
-        const energy = sum / windowSize;
-        if (energy - prevEnergy > state.threshold) {
-          const normPos = i / data.length;
-          if (normPos - detectedSlices[detectedSlices.length - 1] > 0.06) {
-            detectedSlices.push(normPos);
-          }
-        }
-        prevEnergy = energy;
-      }
-
-      if (detectedSlices.length <= 1) {
-        detectedSlices = [0, 0.16, 0.33, 0.5, 0.66, 0.83];
-      }
-
-      state.slices = detectedSlices;
-      updateSlicePadsUI();
-      render();
-    }
-
-    // --- SLICE PADS ---
-    function updateSlicePadsUI() {
-      slicePadsContainer.innerHTML = '';
-      state.slices.forEach((sliceStart, idx) => {
-        const pad = document.createElement('button');
-        pad.className = "flex-shrink-0 bg-slate-800 hover:bg-indigo-600 border border-slate-700 hover:border-indigo-400 text-slate-200 hover:text-white px-3 py-2 rounded-lg text-xs font-mono font-bold flex flex-col items-center gap-1 cursor-pointer transition shadow-md";
+      // Simulate fast local processing delay
+      setTimeout(() => {
+        btn.textContent = 'Generate MIDI & Audio';
+        btn.disabled = false;
+        resultsCard.classList.add('active');
         
-        const sliceEnd = state.slices[idx + 1] || 1.0;
-        const dur = ((sliceEnd - sliceStart) * state.duration).toFixed(2);
-
-        pad.innerHTML = `<span>Slice ${idx + 1}</span><span class="text-[9px] text-slate-400 font-normal">${dur}s</span>`;
-        pad.addEventListener('click', () => playSlice(idx));
-        slicePadsContainer.appendChild(pad);
-      });
+        // Scroll smoothly to results
+        resultsCard.scrollIntoView({ behavior: 'smooth' });
+      }, 1000);
     }
-
-    // --- CANVAS RENDERING ---
-    function render() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      if (state.audioBuffer) {
-        renderWaveform();
-      } else {
-        ctx.fillStyle = '#64748b';
-        ctx.font = '14px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('Click "Generate Sample Audio" or import a file to start', canvas.width / 2, canvas.height / 2);
-      }
-
-      renderSlices();
-      renderPlayhead();
-    }
-
-    function renderWaveform() {
-      const data = state.audioBuffer.getChannelData(0);
-      const step = Math.ceil(data.length / canvas.width);
-      const amp = canvas.height / 2;
-
-      ctx.fillStyle = '#0f172a';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      ctx.beginPath();
-      ctx.strokeStyle = '#6366f1';
-      ctx.lineWidth = 1.5;
-
-      for (let i = 0; i < canvas.width; i++) {
-        let min = 1.0, max = -1.0;
-        for (let j = 0; j < step; j++) {
-          const datum = data[(i * step) + j];
-          if (datum < min) min = datum;
-          if (datum > max) max = datum;
-        }
-        ctx.moveTo(i, (1 + min) * amp);
-        ctx.lineTo(i, (1 + max) * amp);
-      }
-      ctx.stroke();
-    }
-
-    function renderSlices() {
-      state.slices.forEach((slice, idx) => {
-        const x = slice * canvas.width;
-
-        ctx.beginPath();
-        ctx.strokeStyle = '#f43f5e';
-        ctx.lineWidth = 2;
-        ctx.setLineDash([4, 4]);
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, canvas.height);
-        ctx.stroke();
-        ctx.setLineDash([]);
-
-        ctx.fillStyle = '#f43f5e';
-        ctx.fillRect(x - 8, 0, 16, 16);
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '10px monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText(idx + 1, x, 12);
-      });
-    }
-
-    function renderPlayhead() {
-      const x = state.playhead * canvas.width;
-      ctx.beginPath();
-      ctx.strokeStyle = '#22c55e';
-      ctx.lineWidth = 2;
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, canvas.height);
-      ctx.stroke();
-    }
-
-    // --- PLAYBACK ENGINE ---
-    function calculatePitchShift(semitones) {
-      return Math.pow(2, semitones / 12);
-    }
-
-    function playSlice(index) {
-      if (!state.audioBuffer) return;
-      stopPlayback();
-      const actx = getAudioContext();
-
-      const startNorm = state.slices[index];
-      const endNorm = state.slices[index + 1] || 1.0;
-      const startTimeSec = startNorm * state.duration;
-      const sliceDuration = (endNorm - startNorm) * state.duration;
-
-      state.playhead = startNorm;
-
-      const dryGain = actx.createGain();
-      const harmGain = actx.createGain();
-      dryGain.gain.value = 1 - state.mix;
-      harmGain.gain.value = state.mix;
-
-      dryGain.connect(actx.destination);
-      harmGain.connect(actx.destination);
-
-      const drySource = actx.createBufferSource();
-      drySource.buffer = state.audioBuffer;
-      drySource.connect(dryGain);
-      drySource.start(0, startTimeSec, sliceDuration);
-      activeNodes.push(drySource);
-
-      const intervals = [];
-      if (state.harmonies.h3rd) intervals.push(4);
-      if (state.harmonies.h5th) intervals.push(7);
-      if (state.harmonies.hOctave) intervals.push(-12);
-
-      intervals.forEach(semitones => {
-        const harmSource = actx.createBufferSource();
-        harmSource.buffer = state.audioBuffer;
-        harmSource.playbackRate.value = calculatePitchShift(semitones);
-        harmSource.connect(harmGain);
-        harmSource.start(0, startTimeSec, sliceDuration);
-        activeNodes.push(harmSource);
-      });
-
-      render();
-    }
-
-    function stopPlayback() {
-      activeNodes.forEach(n => { try { n.stop(); } catch(e){} });
-      activeNodes = [];
-      state.isPlaying = false;
-      cancelAnimationFrame(animationFrameId);
-      playBtn.textContent = '▶';
-    }
-
-    function playAudio() {
-      if (!state.audioBuffer) return;
-      stopPlayback();
-      const actx = getAudioContext();
-
-      const dryGain = actx.createGain();
-      const harmGain = actx.createGain();
-      dryGain.gain.value = 1 - state.mix;
-      harmGain.gain.value = state.mix;
-
-      dryGain.connect(actx.destination);
-      harmGain.connect(actx.destination);
-
-      const drySource = actx.createBufferSource();
-      drySource.buffer = state.audioBuffer;
-      drySource.connect(dryGain);
-      activeNodes.push(drySource);
-
-      const intervals = [];
-      if (state.harmonies.h3rd) intervals.push(4);
-      if (state.harmonies.h5th) intervals.push(7);
-      if (state.harmonies.hOctave) intervals.push(-12);
-
-      intervals.forEach(semitones => {
-        const harmSource = actx.createBufferSource();
-        harmSource.buffer = state.audioBuffer;
-        harmSource.playbackRate.value = calculatePitchShift(semitones);
-        harmSource.connect(harmGain);
-        harmSource.start(0, pauseOffset);
-        activeNodes.push(harmSource);
-      });
-
-      drySource.start(0, pauseOffset);
-
-      startTime = actx.currentTime - pauseOffset;
-      state.isPlaying = true;
-      playBtn.textContent = '⏸';
-
-      updateAnimation();
-    }
-
-    function updateAnimation() {
-      if (!state.isPlaying) return;
-      const actx = getAudioContext();
-      const elapsed = actx.currentTime - startTime;
-      
-      state.playhead = elapsed / state.duration;
-
-      const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');
-      const secs = (elapsed % 60).toFixed(2).padStart(5, '0');
-      currentTimeDisplay.textContent = `${mins}:${secs}`;
-
-      if (state.playhead >= 1) {
-        if (state.isLooping) {
-          pauseOffset = 0;
-          playAudio();
-        } else {
-          stopPlayback();
-          state.playhead = 0;
-          pauseOffset = 0;
-        }
-      }
-
-      render();
-      if (state.isPlaying) {
-        animationFrameId = requestAnimationFrame(updateAnimation);
-      }
-    }
-
-    // --- CANVAS INTERACTION ---
-    canvas.addEventListener('mousedown', (e) => {
-      const rect = canvas.getBoundingClientRect();
-      const xNorm = (e.clientX - rect.left) / rect.width;
-
-      const sliceIdx = state.slices.findIndex(s => Math.abs(s - xNorm) < 0.02);
-      if (sliceIdx !== -1) {
-        state.draggedSliceIndex = sliceIdx;
-      } else {
-        let selectedIndex = 0;
-        for (let i = 0; i < state.slices.length; i++) {
-          if (state.slices[i] <= xNorm) selectedIndex = i;
-        }
-        playSlice(selectedIndex);
-      }
-    });
-
-    canvas.addEventListener('mousemove', (e) => {
-      if (state.draggedSliceIndex !== null) {
-        const rect = canvas.getBoundingClientRect();
-        const xNorm = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-        state.slices[state.draggedSliceIndex] = xNorm;
-        state.slices.sort((a, b) => a - b);
-        updateSlicePadsUI();
-        render();
-      }
-    });
-
-    window.addEventListener('mouseup', () => {
-      state.draggedSliceIndex = null;
-    });
-
-    canvas.addEventListener('dblclick', (e) => {
-      const rect = canvas.getBoundingClientRect();
-      const xNorm = (e.clientX - rect.left) / rect.width;
-
-      const sliceIdx = state.slices.findIndex(s => Math.abs(s - xNorm) < 0.02);
-      if (sliceIdx !== -1) {
-        if (state.slices.length > 1) state.slices.splice(sliceIdx, 1);
-      } else {
-        state.slices.push(xNorm);
-        state.slices.sort((a, b) => a - b);
-      }
-      updateSlicePadsUI();
-      render();
-    });
-
-    // --- BUTTON CONTROLS ---
-    detectTransientsBtn.addEventListener('click', () => {
-      autoDetectTransients();
-    });
-
-    clearSlicesBtn.addEventListener('click', () => {
-      state.slices = [0];
-      updateSlicePadsUI();
-      render();
-    });
-
-    playBtn.addEventListener('click', () => {
-      if (state.isPlaying) {
-        pauseOffset = getAudioContext().currentTime - startTime;
-        stopPlayback();
-      } else {
-        playAudio();
-      }
-    });
-
-    stopBtn.addEventListener('click', () => {
-      stopPlayback();
-      state.playhead = 0;
-      pauseOffset = 0;
-      currentTimeDisplay.textContent = "00:00.00";
-      render();
-    });
-
-    loopBtn.addEventListener('click', () => {
-      state.isLooping = !state.isLooping;
-      loopBtn.classList.toggle('bg-indigo-600', state.isLooping);
-    });
-
-    mixSlider.addEventListener('input', (e) => {
-      state.mix = parseFloat(e.target.value);
-      mixValue.textContent = `${Math.round(state.mix * 100)}%`;
-    });
-
-    threshSlider.addEventListener('input', (e) => {
-      state.threshold = parseFloat(e.target.value);
-      threshValue.textContent = state.threshold.toFixed(2);
-    });
-
-    harm3rd.addEventListener('change', (e) => state.harmonies.h3rd = e.target.checked);
-    harm5th.addEventListener('change', (e) => state.harmonies.h5th = e.target.checked);
-    harmOctave.addEventListener('change', (e) => state.harmonies.hOctave = e.target.checked);
-
-    // Initial canvas sizing
-    setTimeout(() => {
-      resizeCanvas();
-    }, 100);
   </script>
 </body>
 </html>
