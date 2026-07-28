@@ -3,44 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Harmonix - Audio/MIDI Harmony Slicer</title>
-  <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <title>Harmonix - Audio Slicer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: #0f172a; }
     ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #475569; }
     canvas { touch-action: none; }
   </style>
 </head>
 <body class="h-screen w-screen bg-slate-950 text-slate-100 flex flex-col font-sans overflow-hidden select-none">
 
-  <header class="h-16 border-b border-slate-800 bg-slate-900 px-6 flex items-center justify-between z-10 shrink-0">
+  <header class="h-16 border-b border-slate-800 bg-slate-900 px-6 flex items-center justify-between shrink-0">
     <div class="flex items-center gap-3">
-      <div class="bg-indigo-600 p-2 rounded-lg text-white shadow-lg shadow-indigo-500/30">
-        <i data-lucide="scissors" class="w-5 h-5"></i>
-      </div>
+      <div class="bg-indigo-600 p-2 rounded-lg text-white font-bold">✂</div>
       <div>
-        <h1 class="font-extrabold text-lg tracking-wide bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
-          HARMONIX
-        </h1>
+        <h1 class="font-extrabold text-lg tracking-wide text-indigo-400">HARMONIX</h1>
         <p class="text-xs text-slate-400 font-medium">Audio & MIDI Harmony Slicer</p>
       </div>
     </div>
 
     <div class="flex items-center gap-3">
       <button id="loadDemoBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer">
-        <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i> Load Demo Audio
+        ✨ Generate Sample Audio
       </button>
 
-      <label class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg cursor-pointer transition-all text-sm font-semibold shadow-lg shadow-indigo-600/20">
-        <i data-lucide="upload-cloud" class="w-4 h-4"></i>
-        <span>Import WAV/MIDI</span>
-        <input type="file" id="fileInput" accept=".wav,audio/wav,.mid,.midi,audio/midi" class="hidden" />
+      <label class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg cursor-pointer transition-all text-sm font-semibold shadow-lg">
+        📁 Import File
+        <input type="file" id="fileInput" accept=".wav,audio/wav,.mid,.midi" class="hidden" />
       </label>
       <span id="fileBadge" class="text-xs font-mono bg-indigo-950 text-indigo-300 border border-indigo-800 px-2.5 py-1 rounded-full">
-        Demo Audio Active
+        No Sample Loaded
       </span>
     </div>
   </header>
@@ -50,17 +43,17 @@
     <main class="flex-1 bg-slate-950 flex flex-col relative overflow-hidden">
       
       <div class="absolute top-4 left-4 right-4 flex items-center justify-between z-10 pointer-events-none">
-        <div class="flex items-center gap-2 bg-slate-900/90 backdrop-blur border border-slate-800 p-1.5 rounded-lg pointer-events-auto shadow-xl">
-          <button id="detectTransientsBtn" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded flex items-center gap-1.5 transition cursor-pointer">
-            <i data-lucide="wand2" class="w-3.5 h-3.5"></i> Auto Slice
+        <div class="flex items-center gap-2 bg-slate-900/90 border border-slate-800 p-1.5 rounded-lg pointer-events-auto shadow-xl">
+          <button id="detectTransientsBtn" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded transition cursor-pointer">
+            🪄 Auto Slice
           </button>
-          <button id="clearSlicesBtn" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded flex items-center gap-1.5 transition cursor-pointer">
-            <i data-lucide="trash-2" class="w-3.5 h-3.5 text-rose-400"></i> Clear
+          <button id="clearSlicesBtn" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-rose-400 text-xs font-semibold rounded transition cursor-pointer">
+            🗑 Clear
           </button>
         </div>
         
-        <div class="bg-slate-900/90 backdrop-blur border border-slate-800 px-3 py-1.5 rounded-lg text-xs font-mono text-slate-400 pointer-events-auto shadow-xl">
-          Double-click canvas to add slice line. Drag markers to adjust.
+        <div class="bg-slate-900/90 border border-slate-800 px-3 py-1.5 rounded-lg text-xs font-mono text-slate-400 pointer-events-auto shadow-xl">
+          Click canvas / pad to preview slice. Double-click line to delete.
         </div>
       </div>
 
@@ -69,70 +62,37 @@
       </div>
 
       <div class="h-24 border-t border-slate-800 bg-slate-900/80 p-3 flex flex-col gap-1.5 shrink-0">
-        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Slice Trigger Pads (Click to Preview Slices)</span>
+        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Slice Trigger Pads</span>
         <div id="slicePadsContainer" class="flex items-center gap-2 overflow-x-auto pb-1">
           </div>
       </div>
     </main>
 
-    <aside class="w-80 border-l border-slate-800 bg-slate-900/50 backdrop-blur p-5 flex flex-col gap-6 shrink-0 overflow-y-auto">
+    <aside class="w-80 border-l border-slate-800 bg-slate-900/50 p-5 flex flex-col gap-6 shrink-0 overflow-y-auto">
       
       <div>
-        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-2">
-          <i data-lucide="music" class="w-4 h-4 text-indigo-400"></i> Musical Scale
-        </h2>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs text-slate-400 mb-1">Key</label>
-            <select id="keySelect" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
-              <option value="C">C</option><option value="C#">C# / Db</option>
-              <option value="D">D</option><option value="D#">D# / Eb</option>
-              <option value="E">E</option><option value="F">F</option>
-              <option value="F#">F# / Gb</option><option value="G">G</option>
-              <option value="G#">G# / Ab</option><option value="A">A</option>
-              <option value="A#">A# / Bb</option><option value="B">B</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-xs text-slate-400 mb-1">Scale</label>
-            <select id="scaleSelect" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none">
-              <option value="major">Major</option>
-              <option value="minor">Minor</option>
-              <option value="dorian">Dorian</option>
-              <option value="mixolydian">Mixolydian</option>
-              <option value="chromatic">Chromatic</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <hr class="border-slate-800" />
-
-      <div>
-        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-2">
-          <i data-lucide="layers" class="w-4 h-4 text-indigo-400"></i> Harmony Layers
-        </h2>
+        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Harmony Intervals</h2>
         <div class="space-y-2.5">
-          <label class="flex items-center justify-between p-2.5 bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 rounded-lg cursor-pointer transition">
+          <label class="flex items-center justify-between p-2.5 bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 rounded-lg cursor-pointer">
             <div class="flex items-center gap-2.5">
-              <input type="checkbox" id="harm3rd" class="accent-indigo-500 w-4 h-4 rounded" checked />
+              <input type="checkbox" id="harm3rd" class="accent-indigo-500 w-4 h-4" checked />
               <span class="text-sm font-medium text-slate-200">+3rd (Major)</span>
             </div>
             <span class="text-xs font-mono text-slate-400">+4st</span>
           </label>
 
-          <label class="flex items-center justify-between p-2.5 bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 rounded-lg cursor-pointer transition">
+          <label class="flex items-center justify-between p-2.5 bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 rounded-lg cursor-pointer">
             <div class="flex items-center gap-2.5">
-              <input type="checkbox" id="harm5th" class="accent-indigo-500 w-4 h-4 rounded" checked />
+              <input type="checkbox" id="harm5th" class="accent-indigo-500 w-4 h-4" checked />
               <span class="text-sm font-medium text-slate-200">+5th (Perfect)</span>
             </div>
             <span class="text-xs font-mono text-slate-400">+7st</span>
           </label>
 
-          <label class="flex items-center justify-between p-2.5 bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 rounded-lg cursor-pointer transition">
+          <label class="flex items-center justify-between p-2.5 bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 rounded-lg cursor-pointer">
             <div class="flex items-center gap-2.5">
-              <input type="checkbox" id="harmOctave" class="accent-indigo-500 w-4 h-4 rounded" />
-              <span class="text-sm font-medium text-slate-200">-1 Octave (-8vo)</span>
+              <input type="checkbox" id="harmOctave" class="accent-indigo-500 w-4 h-4" />
+              <span class="text-sm font-medium text-slate-200">-1 Octave</span>
             </div>
             <span class="text-xs font-mono text-slate-400">-12st</span>
           </label>
@@ -142,10 +102,7 @@
       <hr class="border-slate-800" />
 
       <div class="space-y-4">
-        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-          <i data-lucide="sliders" class="w-4 h-4 text-indigo-400"></i> Mix Engine
-        </h2>
-        
+        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400">Engine Settings</h2>
         <div>
           <div class="flex justify-between text-xs text-slate-400 mb-1">
             <span>Dry / Harmony Mix</span>
@@ -156,48 +113,35 @@
 
         <div>
           <div class="flex justify-between text-xs text-slate-400 mb-1">
-            <span>Transient Threshold</span>
+            <span>Transient Sensitivity</span>
             <span id="threshValue" class="font-mono text-indigo-400">0.08</span>
           </div>
           <input type="range" id="threshSlider" min="0.01" max="0.3" step="0.01" value="0.08" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500" />
         </div>
       </div>
-
     </aside>
   </div>
 
   <footer class="h-20 border-t border-slate-800 bg-slate-900 px-6 flex items-center justify-between shrink-0">
-    
     <div class="w-32 font-mono text-sm text-slate-400">
       <span id="currentTime">00:00.00</span>
     </div>
 
     <div class="flex items-center gap-3">
-      <button id="stopBtn" class="p-3 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 rounded-full shadow transition cursor-pointer">
-        <i data-lucide="square" class="w-5 h-5 fill-current"></i>
-      </button>
-      <button id="playBtn" class="p-4 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white rounded-full shadow-lg shadow-indigo-600/30 transition cursor-pointer">
-        <i data-lucide="play" class="w-6 h-6 fill-current"></i>
-      </button>
-      <button id="loopBtn" class="p-3 bg-slate-800 border border-transparent text-slate-400 hover:text-slate-200 active:scale-95 rounded-full shadow transition cursor-pointer">
-        <i data-lucide="repeat" class="w-5 h-5"></i>
-      </button>
+      <button id="stopBtn" class="p-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-full shadow transition cursor-pointer">⏹</button>
+      <button id="playBtn" class="p-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full shadow-lg transition cursor-pointer">▶</button>
+      <button id="loopBtn" class="p-3 bg-slate-800 text-slate-400 hover:text-slate-200 rounded-full shadow transition cursor-pointer">🔁</button>
     </div>
 
-    <div class="flex items-center gap-3">
-      <button id="exportBtn" class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-semibold text-sm px-4 py-2.5 rounded-lg shadow-lg shadow-emerald-600/20 transition cursor-pointer">
-        <i data-lucide="download" class="w-4 h-4"></i> Export WAV
-      </button>
-    </div>
+    <button id="exportBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm px-4 py-2.5 rounded-lg shadow transition cursor-pointer">
+      ⬇ Export WAV
+    </button>
   </footer>
 
   <script>
-    lucide.createIcons();
-
     const state = {
       fileType: 'wav',
       audioBuffer: null,
-      midiData: null,
       slices: [0],
       isPlaying: false,
       isLooping: false,
@@ -235,7 +179,6 @@
     const threshSlider = document.getElementById('threshSlider');
     const mixValue = document.getElementById('mixValue');
     const threshValue = document.getElementById('threshValue');
-
     const harm3rd = document.getElementById('harm3rd');
     const harm5th = document.getElementById('harm5th');
     const harmOctave = document.getElementById('harmOctave');
@@ -252,22 +195,22 @@
     }
 
     function resizeCanvas() {
-      canvas.width = canvasContainer.clientWidth * window.devicePixelRatio;
-      canvas.height = canvasContainer.clientHeight * window.devicePixelRatio;
+      if (!canvasContainer.clientWidth) return;
+      canvas.width = canvasContainer.clientWidth;
+      canvas.height = canvasContainer.clientHeight;
       render();
     }
     window.addEventListener('resize', resizeCanvas);
 
-    // --- DEMO SAMPLE GENERATOR ---
+    // --- DEMO AUDIO CREATOR ---
     function generateDemoAudio() {
       const actx = getAudioContext();
       const sampleRate = actx.sampleRate;
-      const duration = 3.2; 
+      const duration = 3.0; 
       const buffer = actx.createBuffer(1, sampleRate * duration, sampleRate);
       const data = buffer.getChannelData(0);
 
-      // Create melodic arpeggiated drum & synth sample with clear hits
-      const notes = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63, 261.63, 196.00];
+      const notes = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63];
       const stepTime = duration / notes.length;
 
       for (let i = 0; i < buffer.length; i++) {
@@ -276,20 +219,14 @@
         const localTime = t % stepTime;
         const freq = notes[step % notes.length];
 
-        // Transient Kick/Synth Attack
-        const kickEnv = Math.exp(-30 * localTime);
-        const synthEnv = Math.exp(-8 * localTime);
-        
-        const kick = Math.sin(2 * Math.PI * 60 * localTime) * kickEnv;
-        const synth = Math.sin(2 * Math.PI * freq * localTime) * synthEnv;
-
-        data[i] = (kick * 0.6) + (synth * 0.4);
+        const env = Math.exp(-12 * localTime);
+        data[i] = Math.sin(2 * Math.PI * freq * localTime) * env * 0.5;
       }
 
       state.audioBuffer = buffer;
       state.fileType = 'wav';
       state.duration = duration;
-      state.midiData = null;
+      fileBadge.textContent = "Demo Audio Active";
 
       autoDetectTransients();
     }
@@ -297,99 +234,31 @@
     loadDemoBtn.addEventListener('click', () => {
       stopPlayback();
       generateDemoAudio();
-      fileBadge.textContent = "Demo Audio Active";
-      state.playhead = 0;
-      pauseOffset = 0;
     });
 
-    // --- FILE UPLOAD HANDLER ---
+    // --- FILE UPLOAD ---
     fileInput.addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
 
       stopPlayback();
-      const ext = file.name.split('.').pop().toLowerCase();
-      
       try {
         const arrayBuffer = await file.arrayBuffer();
-
-        if (ext === 'wav') {
-          const actx = getAudioContext();
-          state.audioBuffer = await actx.decodeAudioData(arrayBuffer);
-          state.fileType = 'wav';
-          state.duration = state.audioBuffer.duration;
-          state.midiData = null;
-          autoDetectTransients();
-        } else if (ext === 'mid' || ext === 'midi') {
-          state.midiData = parseMIDI(arrayBuffer);
-          state.fileType = 'midi';
-          state.audioBuffer = null;
-          state.duration = state.midiData.duration || 4.0;
-          autoDetectMIDISlices();
-        }
+        const actx = getAudioContext();
+        state.audioBuffer = await actx.decodeAudioData(arrayBuffer);
+        state.fileType = 'wav';
+        state.duration = state.audioBuffer.duration;
 
         fileBadge.textContent = file.name.substring(0, 16) + '...';
         state.playhead = 0;
         pauseOffset = 0;
-        resizeCanvas();
+        autoDetectTransients();
       } catch (err) {
-        alert('Error decoding audio or MIDI file.');
+        alert('Could not process audio file.');
       }
     });
 
-    function parseMIDI(buffer) {
-      const view = new DataView(buffer);
-      const notes = [];
-      let maxTime = 0;
-      const ticksPerBeat = view.getUint16(12) || 480;
-
-      let offset = 14;
-      while (offset < buffer.byteLength - 8) {
-        const chunkType = String.fromCharCode(view.getUint8(offset), view.getUint8(offset+1), view.getUint8(offset+2), view.getUint8(offset+3));
-        const chunkLength = view.getUint32(offset + 4);
-        offset += 8;
-
-        if (chunkType === 'MTrk') {
-          let trackOffset = offset;
-          let trackEnd = offset + chunkLength;
-          let currentTicks = 0;
-
-          while (trackOffset < trackEnd) {
-            let deltaTime = 0, byte = 0;
-            do {
-              byte = view.getUint8(trackOffset++);
-              deltaTime = (deltaTime << 7) | (byte & 0x7F);
-            } while (byte & 0x80);
-
-            currentTicks += deltaTime;
-            const status = view.getUint8(trackOffset);
-
-            if ((status & 0xF0) === 0x90) {
-              const note = view.getUint8(trackOffset + 1);
-              const vel = view.getUint8(trackOffset + 2);
-              trackOffset += 3;
-              if (vel > 0) {
-                const timeSec = (currentTicks / ticksPerBeat) * 0.5;
-                notes.push({ note, time: timeSec, duration: 0.4 });
-                if (timeSec > maxTime) maxTime = timeSec;
-              }
-            } else if ((status & 0x80) === 0x80) {
-              trackOffset += 3;
-            } else if (status === 0xFF) {
-              trackOffset += 2;
-              let len = view.getUint8(trackOffset++);
-              trackOffset += len;
-            } else {
-              trackOffset++;
-            }
-          }
-        }
-        offset += chunkLength;
-      }
-      return { notes, duration: Math.max(maxTime + 0.5, 2.0) };
-    }
-
-    // --- TRANSIENT DETECTOR & SLICE CREATOR ---
+    // --- AUTO SLICE ENGINE ---
     function autoDetectTransients() {
       if (!state.audioBuffer) return;
       const data = state.audioBuffer.getChannelData(0);
@@ -405,16 +274,15 @@
         const energy = sum / windowSize;
         if (energy - prevEnergy > state.threshold) {
           const normPos = i / data.length;
-          if (normPos - detectedSlices[detectedSlices.length - 1] > 0.05) {
+          if (normPos - detectedSlices[detectedSlices.length - 1] > 0.06) {
             detectedSlices.push(normPos);
           }
         }
         prevEnergy = energy;
       }
 
-      // Fallback grid if threshold yielded no slices
       if (detectedSlices.length <= 1) {
-        detectedSlices = [0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875];
+        detectedSlices = [0, 0.16, 0.33, 0.5, 0.66, 0.83];
       }
 
       state.slices = detectedSlices;
@@ -422,15 +290,7 @@
       render();
     }
 
-    function autoDetectMIDISlices() {
-      if (!state.midiData) return;
-      const times = state.midiData.notes.map(n => n.time / state.duration);
-      state.slices = Array.from(new Set([0, ...times])).sort((a, b) => a - b);
-      updateSlicePadsUI();
-      render();
-    }
-
-    // --- DYNAMIC SLICE PREVIEW PADS ---
+    // --- SLICE PADS ---
     function updateSlicePadsUI() {
       slicePadsContainer.innerHTML = '';
       state.slices.forEach((sliceStart, idx) => {
@@ -440,27 +300,23 @@
         const sliceEnd = state.slices[idx + 1] || 1.0;
         const dur = ((sliceEnd - sliceStart) * state.duration).toFixed(2);
 
-        pad.innerHTML = `
-          <span>Slice ${idx + 1}</span>
-          <span class="text-[9px] text-slate-400 hover:text-indigo-200 font-normal">${dur}s</span>
-        `;
-
-        pad.addEventListener('click', () => {
-          playSlice(idx);
-        });
-
+        pad.innerHTML = `<span>Slice ${idx + 1}</span><span class="text-[9px] text-slate-400 font-normal">${dur}s</span>`;
+        pad.addEventListener('click', () => playSlice(idx));
         slicePadsContainer.appendChild(pad);
       });
     }
 
-    // --- CANVAS RENDER ENGINE ---
+    // --- CANVAS RENDERING ---
     function render() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      if (state.fileType === 'wav' && state.audioBuffer) {
+      if (state.audioBuffer) {
         renderWaveform();
-      } else if (state.fileType === 'midi' && state.midiData) {
-        renderPianoRoll();
+      } else {
+        ctx.fillStyle = '#64748b';
+        ctx.font = '14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Click "Generate Sample Audio" or import a file to start', canvas.width / 2, canvas.height / 2);
       }
 
       renderSlices();
@@ -490,23 +346,6 @@
         ctx.lineTo(i, (1 + max) * amp);
       }
       ctx.stroke();
-    }
-
-    function renderPianoRoll() {
-      ctx.fillStyle = '#0f172a';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      const notes = state.midiData.notes;
-      const minNote = 36, maxNote = 84;
-
-      notes.forEach(n => {
-        const x = (n.time / state.duration) * canvas.width;
-        const w = (n.duration / state.duration) * canvas.width;
-        const y = canvas.height - ((n.note - minNote) / (maxNote - minNote)) * canvas.height;
-
-        ctx.fillStyle = '#38bdf8';
-        ctx.fillRect(x, y - 4, Math.max(w, 4), 6);
-      });
     }
 
     function renderSlices() {
@@ -541,53 +380,50 @@
       ctx.stroke();
     }
 
-    // --- PLAYBACK & SLICE AUDITION ENGINE ---
+    // --- PLAYBACK ENGINE ---
     function calculatePitchShift(semitones) {
       return Math.pow(2, semitones / 12);
     }
 
     function playSlice(index) {
+      if (!state.audioBuffer) return;
       stopPlayback();
       const actx = getAudioContext();
 
       const startNorm = state.slices[index];
       const endNorm = state.slices[index + 1] || 1.0;
-
       const startTimeSec = startNorm * state.duration;
       const sliceDuration = (endNorm - startNorm) * state.duration;
 
       state.playhead = startNorm;
 
-      if (state.audioBuffer) {
-        const dryGain = actx.createGain();
-        const harmGain = actx.createGain();
+      const dryGain = actx.createGain();
+      const harmGain = actx.createGain();
+      dryGain.gain.value = 1 - state.mix;
+      harmGain.gain.value = state.mix;
 
-        dryGain.gain.value = 1 - state.mix;
-        harmGain.gain.value = state.mix;
+      dryGain.connect(actx.destination);
+      harmGain.connect(actx.destination);
 
-        dryGain.connect(actx.destination);
-        harmGain.connect(actx.destination);
+      const drySource = actx.createBufferSource();
+      drySource.buffer = state.audioBuffer;
+      drySource.connect(dryGain);
+      drySource.start(0, startTimeSec, sliceDuration);
+      activeNodes.push(drySource);
 
-        const drySource = actx.createBufferSource();
-        drySource.buffer = state.audioBuffer;
-        drySource.connect(dryGain);
-        drySource.start(0, startTimeSec, sliceDuration);
-        activeNodes.push(drySource);
+      const intervals = [];
+      if (state.harmonies.h3rd) intervals.push(4);
+      if (state.harmonies.h5th) intervals.push(7);
+      if (state.harmonies.hOctave) intervals.push(-12);
 
-        const intervals = [];
-        if (state.harmonies.h3rd) intervals.push(4);
-        if (state.harmonies.h5th) intervals.push(7);
-        if (state.harmonies.hOctave) intervals.push(-12);
-
-        intervals.forEach(semitones => {
-          const harmSource = actx.createBufferSource();
-          harmSource.buffer = state.audioBuffer;
-          harmSource.playbackRate.value = calculatePitchShift(semitones);
-          harmSource.connect(harmGain);
-          harmSource.start(0, startTimeSec, sliceDuration);
-          activeNodes.push(harmSource);
-        });
-      }
+      intervals.forEach(semitones => {
+        const harmSource = actx.createBufferSource();
+        harmSource.buffer = state.audioBuffer;
+        harmSource.playbackRate.value = calculatePitchShift(semitones);
+        harmSource.connect(harmGain);
+        harmSource.start(0, startTimeSec, sliceDuration);
+        activeNodes.push(harmSource);
+      });
 
       render();
     }
@@ -597,76 +433,46 @@
       activeNodes = [];
       state.isPlaying = false;
       cancelAnimationFrame(animationFrameId);
-      playBtn.innerHTML = `<i data-lucide="play" class="w-6 h-6 fill-current"></i>`;
-      lucide.createIcons();
+      playBtn.textContent = '▶';
     }
 
     function playAudio() {
+      if (!state.audioBuffer) return;
       stopPlayback();
       const actx = getAudioContext();
 
-      if (state.fileType === 'wav' && state.audioBuffer) {
-        const dryGain = actx.createGain();
-        const harmGain = actx.createGain();
+      const dryGain = actx.createGain();
+      const harmGain = actx.createGain();
+      dryGain.gain.value = 1 - state.mix;
+      harmGain.gain.value = state.mix;
 
-        dryGain.gain.value = 1 - state.mix;
-        harmGain.gain.value = state.mix;
+      dryGain.connect(actx.destination);
+      harmGain.connect(actx.destination);
 
-        dryGain.connect(actx.destination);
-        harmGain.connect(actx.destination);
+      const drySource = actx.createBufferSource();
+      drySource.buffer = state.audioBuffer;
+      drySource.connect(dryGain);
+      activeNodes.push(drySource);
 
-        const drySource = actx.createBufferSource();
-        drySource.buffer = state.audioBuffer;
-        drySource.connect(dryGain);
-        activeNodes.push(drySource);
+      const intervals = [];
+      if (state.harmonies.h3rd) intervals.push(4);
+      if (state.harmonies.h5th) intervals.push(7);
+      if (state.harmonies.hOctave) intervals.push(-12);
 
-        const intervals = [];
-        if (state.harmonies.h3rd) intervals.push(4);
-        if (state.harmonies.h5th) intervals.push(7);
-        if (state.harmonies.hOctave) intervals.push(-12);
+      intervals.forEach(semitones => {
+        const harmSource = actx.createBufferSource();
+        harmSource.buffer = state.audioBuffer;
+        harmSource.playbackRate.value = calculatePitchShift(semitones);
+        harmSource.connect(harmGain);
+        harmSource.start(0, pauseOffset);
+        activeNodes.push(harmSource);
+      });
 
-        intervals.forEach(semitones => {
-          const harmSource = actx.createBufferSource();
-          harmSource.buffer = state.audioBuffer;
-          harmSource.playbackRate.value = calculatePitchShift(semitones);
-          harmSource.connect(harmGain);
-          harmSource.start(0, pauseOffset);
-          activeNodes.push(harmSource);
-        });
-
-        drySource.start(0, pauseOffset);
-
-      } else if (state.fileType === 'midi' && state.midiData) {
-        const now = actx.currentTime;
-        state.midiData.notes.forEach(n => {
-          if (n.time >= pauseOffset) {
-            const startAt = now + (n.time - pauseOffset);
-            const intervals = [0];
-            if (state.harmonies.h3rd) intervals.push(4);
-            if (state.harmonies.h5th) intervals.push(7);
-            if (state.harmonies.hOctave) intervals.push(-12);
-
-            intervals.forEach(st => {
-              const osc = actx.createOscillator();
-              const gain = actx.createGain();
-              osc.type = 'sawtooth';
-              osc.frequency.setValueAtTime(440 * Math.pow(2, (n.note + st - 69) / 12), startAt);
-              gain.gain.setValueAtTime(0.1, startAt);
-              gain.gain.exponentialRampToValueAtTime(0.001, startAt + n.duration);
-              osc.connect(gain);
-              gain.connect(actx.destination);
-              osc.start(startAt);
-              osc.stop(startAt + n.duration);
-              activeNodes.push(osc);
-            });
-          }
-        });
-      }
+      drySource.start(0, pauseOffset);
 
       startTime = actx.currentTime - pauseOffset;
       state.isPlaying = true;
-      playBtn.innerHTML = `<i data-lucide="pause" class="w-6 h-6 fill-current"></i>`;
-      lucide.createIcons();
+      playBtn.textContent = '⏸';
 
       updateAnimation();
     }
@@ -699,19 +505,15 @@
       }
     }
 
-    // --- CANVAS INTERACTION HANDLERS ---
-    let isDragging = false;
-
+    // --- CANVAS INTERACTION ---
     canvas.addEventListener('mousedown', (e) => {
       const rect = canvas.getBoundingClientRect();
       const xNorm = (e.clientX - rect.left) / rect.width;
 
-      const sliceIdx = state.slices.findIndex(s => Math.abs(s - xNorm) < 0.015);
+      const sliceIdx = state.slices.findIndex(s => Math.abs(s - xNorm) < 0.02);
       if (sliceIdx !== -1) {
         state.draggedSliceIndex = sliceIdx;
-        isDragging = true;
       } else {
-        // Find clicked slice region and audition
         let selectedIndex = 0;
         for (let i = 0; i < state.slices.length; i++) {
           if (state.slices[i] <= xNorm) selectedIndex = i;
@@ -721,7 +523,7 @@
     });
 
     canvas.addEventListener('mousemove', (e) => {
-      if (isDragging && state.draggedSliceIndex !== null) {
+      if (state.draggedSliceIndex !== null) {
         const rect = canvas.getBoundingClientRect();
         const xNorm = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
         state.slices[state.draggedSliceIndex] = xNorm;
@@ -732,7 +534,6 @@
     });
 
     window.addEventListener('mouseup', () => {
-      isDragging = false;
       state.draggedSliceIndex = null;
     });
 
@@ -740,11 +541,9 @@
       const rect = canvas.getBoundingClientRect();
       const xNorm = (e.clientX - rect.left) / rect.width;
 
-      const sliceIdx = state.slices.findIndex(s => Math.abs(s - xNorm) < 0.015);
+      const sliceIdx = state.slices.findIndex(s => Math.abs(s - xNorm) < 0.02);
       if (sliceIdx !== -1) {
-        if (state.slices.length > 1) {
-          state.slices.splice(sliceIdx, 1);
-        }
+        if (state.slices.length > 1) state.slices.splice(sliceIdx, 1);
       } else {
         state.slices.push(xNorm);
         state.slices.sort((a, b) => a - b);
@@ -753,10 +552,9 @@
       render();
     });
 
-    // --- BUTTON BINDINGS ---
+    // --- BUTTON CONTROLS ---
     detectTransientsBtn.addEventListener('click', () => {
-      if (state.fileType === 'wav') autoDetectTransients();
-      if (state.fileType === 'midi') autoDetectMIDISlices();
+      autoDetectTransients();
     });
 
     clearSlicesBtn.addEventListener('click', () => {
@@ -770,7 +568,7 @@
         pauseOffset = getAudioContext().currentTime - startTime;
         stopPlayback();
       } else {
-        if (state.audioBuffer || state.midiData) playAudio();
+        playAudio();
       }
     });
 
@@ -784,10 +582,9 @@
 
     loopBtn.addEventListener('click', () => {
       state.isLooping = !state.isLooping;
-      loopBtn.classList.toggle('text-indigo-400', state.isLooping);
+      loopBtn.classList.toggle('bg-indigo-600', state.isLooping);
     });
 
-    // Controls
     mixSlider.addEventListener('input', (e) => {
       state.mix = parseFloat(e.target.value);
       mixValue.textContent = `${Math.round(state.mix * 100)}%`;
@@ -802,92 +599,10 @@
     harm5th.addEventListener('change', (e) => state.harmonies.h5th = e.target.checked);
     harmOctave.addEventListener('change', (e) => state.harmonies.hOctave = e.target.checked);
 
-    // WAV Export
-    exportBtn.addEventListener('click', async () => {
-      if (!state.audioBuffer) {
-        alert("WAV Export is available for audio samples.");
-        return;
-      }
-
-      const originalBuffer = state.audioBuffer;
-      const offlineCtx = new OfflineAudioContext(
-        originalBuffer.numberOfChannels,
-        originalBuffer.length,
-        originalBuffer.sampleRate
-      );
-
-      const dryGain = offlineCtx.createGain();
-      const harmGain = offlineCtx.createGain();
-      dryGain.gain.value = 1 - state.mix;
-      harmGain.gain.value = state.mix;
-
-      dryGain.connect(offlineCtx.destination);
-      harmGain.connect(offlineCtx.destination);
-
-      const drySource = offlineCtx.createBufferSource();
-      drySource.buffer = originalBuffer;
-      drySource.connect(dryGain);
-      drySource.start(0);
-
-      const intervals = [];
-      if (state.harmonies.h3rd) intervals.push(4);
-      if (state.harmonies.h5th) intervals.push(7);
-      if (state.harmonies.hOctave) intervals.push(-12);
-
-      intervals.forEach(semitones => {
-        const harmSource = offlineCtx.createBufferSource();
-        harmSource.buffer = originalBuffer;
-        harmSource.playbackRate.value = calculatePitchShift(semitones);
-        harmSource.connect(harmGain);
-        harmSource.start(0);
-      });
-
-      const renderedBuffer = await offlineCtx.startRendering();
-      const wavBlob = bufferToWave(renderedBuffer, renderedBuffer.length);
-
-      const downloadUrl = URL.createObjectURL(wavBlob);
-      const a = document.createElement('a');
-      a.href = downloadUrl;
-      a.download = `harmonix-render-${Date.now()}.wav`;
-      a.click();
-    });
-
-    function bufferToWave(abuffer, len) {
-      let numOfChan = abuffer.numberOfChannels,
-          length = len * numOfChan * 2 + 44,
-          buffer = new ArrayBuffer(length),
-          view = new DataView(buffer),
-          channels = [], i, sample, pos = 0;
-
-      function setUint16(data) { view.setUint16(pos, data, true); pos += 2; }
-      function setUint32(data) { view.setUint32(pos, data, true); pos += 4; }
-
-      setUint32(0x46464952); setUint32(length - 8); setUint32(0x45564157);
-      setUint32(0x20746d66); setUint32(16); setUint16(1); setUint16(numOfChan);
-      setUint32(abuffer.sampleRate); setUint32(abuffer.sampleRate * 2 * numOfChan);
-      setUint16(numOfChan * 2); setUint16(16); setUint32(0x61746164);
-      setUint32(length - pos - 4);
-
-      for (i = 0; i < abuffer.numberOfChannels; i++) channels.push(abuffer.getChannelData(i));
-
-      let offset = 0;
-      while (pos < length) {
-        for (i = 0; i < numOfChan; i++) {
-          sample = Math.max(-1, Math.min(1, channels[i][offset]));
-          sample = (0.5 + sample < 0 ? sample * 32768 : sample * 32767) | 0;
-          view.setInt16(pos, sample, true);
-          pos += 2;
-        }
-        offset++;
-      }
-      return new Blob([buffer], { type: "audio/wav" });
-    }
-
-    // Auto-load initial demo track on boot
-    window.addEventListener('DOMContentLoaded', () => {
+    // Initial canvas sizing
+    setTimeout(() => {
       resizeCanvas();
-      generateDemoAudio();
-    });
+    }, 100);
   </script>
 </body>
 </html>
