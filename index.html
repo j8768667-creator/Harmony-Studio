@@ -7,7 +7,6 @@
   <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
-    /* Custom scrollbar for dark mode UX */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: #0f172a; }
     ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
@@ -30,10 +29,14 @@
       </div>
     </div>
 
-    <div class="flex items-center gap-4">
-      <label class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-indigo-500 text-slate-200 px-4 py-2 rounded-lg cursor-pointer transition-all text-sm font-semibold shadow-sm">
-        <i data-lucide="upload-cloud" class="w-4 h-4 text-indigo-400"></i>
-        <span>Import WAV or MIDI</span>
+    <div class="flex items-center gap-3">
+      <button id="loadDemoBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition">
+        <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i> Load Demo Sample
+      </button>
+
+      <label class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg cursor-pointer transition-all text-sm font-semibold shadow-lg shadow-indigo-600/20">
+        <i data-lucide="upload-cloud" class="w-4 h-4"></i>
+        <span>Import WAV/MIDI</span>
         <input type="file" id="fileInput" accept=".wav,audio/wav,.mid,.midi,audio/midi" class="hidden" />
       </label>
       <span id="fileBadge" class="hidden text-xs font-mono bg-indigo-950 text-indigo-300 border border-indigo-800 px-2.5 py-1 rounded-full">
@@ -47,16 +50,16 @@
     <main class="flex-1 bg-slate-950 flex flex-col relative overflow-hidden">
       <div class="absolute top-4 left-4 right-4 flex items-center justify-between z-10 pointer-events-none">
         <div class="flex items-center gap-2 bg-slate-900/90 backdrop-blur border border-slate-800 p-1.5 rounded-lg pointer-events-auto shadow-xl">
-          <button id="detectTransientsBtn" title="Auto Detect Slices" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded flex items-center gap-1.5 transition">
+          <button id="detectTransientsBtn" title="Auto Detect Slices" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded flex items-center gap-1.5 transition cursor-pointer">
             <i data-lucide="wand2" class="w-3.5 h-3.5 text-indigo-400"></i> Auto Slice
           </button>
-          <button id="clearSlicesBtn" title="Clear Slices" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded flex items-center gap-1.5 transition">
+          <button id="clearSlicesBtn" title="Clear Slices" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded flex items-center gap-1.5 transition cursor-pointer">
             <i data-lucide="trash-2" class="w-3.5 h-3.5 text-rose-400"></i> Clear
           </button>
         </div>
         
         <div class="bg-slate-900/90 backdrop-blur border border-slate-800 px-3 py-1.5 rounded-lg text-xs font-mono text-slate-400 pointer-events-auto shadow-xl">
-          Double-Click canvas to add/remove slice. Drag to move.
+          Click slice area to preview. Double-click line to remove. Click blank canvas to add slice.
         </div>
       </div>
 
@@ -106,9 +109,9 @@
           <label class="flex items-center justify-between p-2.5 bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 rounded-lg cursor-pointer transition">
             <div class="flex items-center gap-2.5">
               <input type="checkbox" id="harm3rd" class="accent-indigo-500 w-4 h-4 rounded" checked />
-              <span class="text-sm font-medium text-slate-200">+3rd (Diatonic)</span>
+              <span class="text-sm font-medium text-slate-200">+3rd (Major)</span>
             </div>
-            <span class="text-xs font-mono text-slate-400">+3st / +4st</span>
+            <span class="text-xs font-mono text-slate-400">+4st</span>
           </label>
 
           <label class="flex items-center justify-between p-2.5 bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 rounded-lg cursor-pointer transition">
@@ -163,26 +166,25 @@
     </div>
 
     <div class="flex items-center gap-3">
-      <button id="stopBtn" class="p-3 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 rounded-full shadow transition">
+      <button id="stopBtn" class="p-3 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 rounded-full shadow transition cursor-pointer">
         <i data-lucide="square" class="w-5 h-5 fill-current"></i>
       </button>
-      <button id="playBtn" class="p-4 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white rounded-full shadow-lg shadow-indigo-600/30 transition">
+      <button id="playBtn" class="p-4 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white rounded-full shadow-lg shadow-indigo-600/30 transition cursor-pointer">
         <i data-lucide="play" class="w-6 h-6 fill-current"></i>
       </button>
-      <button id="loopBtn" class="p-3 bg-slate-800 border border-transparent text-slate-400 hover:text-slate-200 active:scale-95 rounded-full shadow transition">
+      <button id="loopBtn" class="p-3 bg-slate-800 border border-transparent text-slate-400 hover:text-slate-200 active:scale-95 rounded-full shadow transition cursor-pointer">
         <i data-lucide="repeat" class="w-5 h-5"></i>
       </button>
     </div>
 
     <div class="flex items-center gap-3">
-      <button id="exportBtn" class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-semibold text-sm px-4 py-2.5 rounded-lg shadow-lg shadow-emerald-600/20 transition">
+      <button id="exportBtn" class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-semibold text-sm px-4 py-2.5 rounded-lg shadow-lg shadow-emerald-600/20 transition cursor-pointer">
         <i data-lucide="download" class="w-4 h-4"></i> Export Rendered WAV
       </button>
     </div>
   </footer>
 
   <script>
-    // Initialize Lucide Icons
     lucide.createIcons();
 
     // --- STATE MANAGEMENT ---
@@ -190,40 +192,30 @@
       fileType: null, // 'wav' | 'midi'
       audioBuffer: null,
       midiData: null,
-      slices: [], // array of normalized slice positions [0...1]
+      slices: [0], // array of normalized slice positions [0...1]
       isPlaying: false,
       isLooping: false,
-      playhead: 0, // 0...1 normalized position
+      playhead: 0,
       draggedSliceIndex: null,
-      key: 'C',
-      scale: 'major',
       harmonies: { h3rd: true, h5th: true, hOctave: false },
       mix: 0.5,
       threshold: 0.15,
       duration: 0
     };
 
-    // Scaled Interval Offsets (semitones)
-    const scaleIntervals = {
-      major: [0, 2, 4, 5, 7, 9, 11],
-      minor: [0, 2, 3, 5, 7, 8, 10],
-      dorian: [0, 2, 3, 5, 7, 9, 10],
-      mixolydian: [0, 2, 4, 5, 7, 9, 10],
-      chromatic: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-    };
-
-    // --- AUDIO & CANVAS DOM REFERENCES ---
     let audioCtx = null;
     let activeNodes = [];
     let animationFrameId = null;
     let startTime = 0;
     let pauseOffset = 0;
 
+    // DOM Elements
     const fileInput = document.getElementById('fileInput');
     const fileBadge = document.getElementById('fileBadge');
     const canvas = document.getElementById('visualCanvas');
     const ctx = canvas.getContext('2d');
     const canvasContainer = document.getElementById('canvasContainer');
+    const loadDemoBtn = document.getElementById('loadDemoBtn');
 
     const playBtn = document.getElementById('playBtn');
     const stopBtn = document.getElementById('stopBtn');
@@ -237,14 +229,11 @@
     const mixValue = document.getElementById('mixValue');
     const threshValue = document.getElementById('threshValue');
 
-    const keySelect = document.getElementById('keySelect');
-    const scaleSelect = document.getElementById('scaleSelect');
     const harm3rd = document.getElementById('harm3rd');
     const harm5th = document.getElementById('harm5th');
     const harmOctave = document.getElementById('harmOctave');
     const currentTimeDisplay = document.getElementById('currentTime');
 
-    // Initialize Web Audio API safely
     function getAudioContext() {
       if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -255,7 +244,6 @@
       return audioCtx;
     }
 
-    // Canvas Resize Observer
     function resizeCanvas() {
       canvas.width = canvasContainer.clientWidth * window.devicePixelRatio;
       canvas.height = canvasContainer.clientHeight * window.devicePixelRatio;
@@ -263,7 +251,45 @@
     }
     window.addEventListener('resize', resizeCanvas);
 
-    // --- FILE LOADING & PARSING ---
+    // --- DEMO AUDIO GENERATOR ---
+    loadDemoBtn.addEventListener('click', () => {
+      stopPlayback();
+      const actx = getAudioContext();
+      const sampleRate = actx.sampleRate;
+      const duration = 3.0; // 3 second demo loop
+      const buffer = actx.createBuffer(1, sampleRate * duration, sampleRate);
+      const data = buffer.getChannelData(0);
+
+      // Generate synth melody rhythm with distinct transients
+      const frequencies = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63]; // C-E-G-C-G-E
+      const noteLength = duration / frequencies.length;
+
+      for (let i = 0; i < buffer.length; i++) {
+        const t = i / sampleRate;
+        const noteIdx = Math.floor(t / noteLength);
+        const noteTime = t % noteLength;
+        const freq = frequencies[noteIdx % frequencies.length];
+
+        // Synthesize envelope + note harmonics
+        const envelope = Math.exp(-6 * noteTime);
+        const signal = Math.sin(2 * Math.PI * freq * t) + 0.5 * Math.sin(2 * Math.PI * freq * 2 * t);
+        data[i] = signal * envelope * 0.5;
+      }
+
+      state.audioBuffer = buffer;
+      state.fileType = 'wav';
+      state.duration = duration;
+      state.midiData = null;
+
+      fileBadge.textContent = "Demo Synth Sample";
+      fileBadge.classList.remove('hidden');
+      state.playhead = 0;
+      pauseOffset = 0;
+
+      autoDetectTransients();
+    });
+
+    // --- FILE LOADING ---
     fileInput.addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -285,11 +311,8 @@
           state.midiData = parseMIDI(arrayBuffer);
           state.fileType = 'midi';
           state.audioBuffer = null;
-          state.duration = state.midiData.duration || 5.0; // fallback duration
+          state.duration = state.midiData.duration || 5.0;
           autoDetectMIDISlices();
-        } else {
-          alert('Unsupported file format. Please upload a WAV or MIDI file.');
-          return;
         }
 
         fileBadge.textContent = `${file.name.substring(0, 18)}...`;
@@ -298,27 +321,19 @@
         pauseOffset = 0;
         resizeCanvas();
       } catch (err) {
-        console.error("File processing error:", err);
-        alert('Failed to decode the selected audio/MIDI file.');
+        console.error("File loading error:", err);
+        alert('Could not decode file format.');
       }
     });
 
-    // Simple Custom MIDI Binary Parser
     function parseMIDI(buffer) {
       const view = new DataView(buffer);
-      let offset = 0;
-      
-      // Basic Chunk Header Check
-      const header = String.fromCharCode(view.getUint8(0), view.getUint8(1), view.getUint8(2), view.getUint8(3));
-      if (header !== 'MThd') throw new Error('Invalid MIDI Header');
-
-      const ticksPerBeat = view.getUint16(12);
-      offset = 14;
-
       const notes = [];
       let maxTime = 0;
+      const ticksPerBeat = view.getUint16(12) || 480;
 
-      while (offset < buffer.byteLength) {
+      let offset = 14;
+      while (offset < buffer.byteLength - 8) {
         const chunkType = String.fromCharCode(view.getUint8(offset), view.getUint8(offset+1), view.getUint8(offset+2), view.getUint8(offset+3));
         const chunkLength = view.getUint32(offset + 4);
         offset += 8;
@@ -326,83 +341,66 @@
         if (chunkType === 'MTrk') {
           let trackOffset = offset;
           let trackEnd = offset + chunkLength;
-          let currentTimeTicks = 0;
-          let runningStatus = 0;
+          let currentTicks = 0;
 
           while (trackOffset < trackEnd) {
-            // Read Variable Length Quantity (Delta Time)
-            let deltaTime = 0;
-            let byte = 0;
+            let deltaTime = 0, byte = 0;
             do {
               byte = view.getUint8(trackOffset++);
               deltaTime = (deltaTime << 7) | (byte & 0x7F);
             } while (byte & 0x80);
 
-            currentTimeTicks += deltaTime;
+            currentTicks += deltaTime;
+            const status = view.getUint8(trackOffset);
 
-            let status = view.getUint8(trackOffset);
-            if (status & 0x80) {
-              runningStatus = status;
-              trackOffset++;
-            } else {
-              status = runningStatus;
-            }
-
-            const command = status & 0xF0;
-
-            if (command === 0x90 || command === 0x80) {
-              const noteNumber = view.getUint8(trackOffset++);
-              const velocity = view.getUint8(trackOffset++);
-              const timeSec = (currentTimeTicks / ticksPerBeat) * 0.5; // Estimated Tempo
-
-              if (command === 0x90 && velocity > 0) {
-                notes.push({ note: noteNumber, time: timeSec, duration: 0.5 });
+            if ((status & 0xF0) === 0x90) {
+              const note = view.getUint8(trackOffset + 1);
+              const vel = view.getUint8(trackOffset + 2);
+              trackOffset += 3;
+              if (vel > 0) {
+                const timeSec = (currentTicks / ticksPerBeat) * 0.5;
+                notes.push({ note, time: timeSec, duration: 0.4 });
                 if (timeSec > maxTime) maxTime = timeSec;
               }
-            } else if (command === 0xC0 || command === 0xD0) {
-              trackOffset += 1;
-            } else if (command === 0x80 || command === 0xA0 || command === 0xB0 || command === 0xE0) {
-              trackOffset += 2;
+            } else if ((status & 0x80) === 0x80) {
+              trackOffset += 3;
             } else if (status === 0xFF) {
-              trackOffset++; // Skip meta type
-              let len = 0;
-              do {
-                byte = view.getUint8(trackOffset++);
-                len = (len << 7) | (byte & 0x7F);
-              } while (byte & 0x80);
+              trackOffset += 2;
+              let len = view.getUint8(trackOffset++);
               trackOffset += len;
+            } else {
+              trackOffset++;
             }
           }
         }
         offset += chunkLength;
       }
-      return { notes, duration: maxTime + 1.0 };
+      return { notes, duration: Math.max(maxTime + 0.5, 2.0) };
     }
 
-    // --- TRANSIENT DETECTION ---
+    // --- AUTO-SLICE TRANSIENT DETECTION ---
     function autoDetectTransients() {
       if (!state.audioBuffer) return;
       const data = state.audioBuffer.getChannelData(0);
-      const step = Math.floor(state.audioBuffer.sampleRate * 0.05); // 50ms windows
-      const threshold = state.threshold;
-      state.slices = [0];
+      const windowSize = Math.floor(state.audioBuffer.sampleRate * 0.04);
+      const slices = [0];
 
       let prevEnergy = 0;
-      for (let i = 0; i < data.length; i += step) {
+      for (let i = 0; i < data.length; i += windowSize) {
         let sum = 0;
-        for (let j = 0; j < step && (i + j) < data.length; j++) {
+        for (let j = 0; j < windowSize && (i + j) < data.length; j++) {
           sum += Math.abs(data[i + j]);
         }
-        const energy = sum / step;
-        if (energy - prevEnergy > threshold) {
+        const energy = sum / windowSize;
+        if (energy - prevEnergy > state.threshold) {
           const normPos = i / data.length;
-          if (normPos - state.slices[state.slices.length - 1] > 0.03) {
-            state.slices.push(normPos);
+          if (normPos - slices[slices.length - 1] > 0.04) {
+            slices.push(normPos);
           }
         }
         prevEnergy = energy;
       }
-      state.slices.sort((a, b) => a - b);
+      state.slices = slices;
       render();
     }
 
@@ -413,7 +411,7 @@
       render();
     }
 
-    // --- RENDER ENGINE ---
+    // --- CANVAS RENDERING ---
     function render() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -422,11 +420,10 @@
       } else if (state.fileType === 'midi' && state.midiData) {
         renderPianoRoll();
       } else {
-        // Empty State Placeholder
-        ctx.fillStyle = '#475569';
+        ctx.fillStyle = '#64748b';
         ctx.font = '14px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('No File Loaded. Upload a WAV or MIDI file to begin.', canvas.width / 2, canvas.height / 2);
+        ctx.fillText('No track loaded. Click "Load Demo Sample" or import a file.', canvas.width / 2, canvas.height / 2);
       }
 
       renderSlices();
@@ -438,7 +435,7 @@
       const step = Math.ceil(data.length / canvas.width);
       const amp = canvas.height / 2;
 
-      ctx.fillStyle = '#1e1b4b';
+      ctx.fillStyle = '#0f172a';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       ctx.beginPath();
@@ -463,7 +460,7 @@
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       const notes = state.midiData.notes;
-      const minNote = 36, maxNote = 84; // Key Range
+      const minNote = 36, maxNote = 84;
 
       notes.forEach(n => {
         const x = (n.time / state.duration) * canvas.width;
@@ -479,7 +476,6 @@
       state.slices.forEach((slice, idx) => {
         const x = slice * canvas.width;
 
-        // Slice Line
         ctx.beginPath();
         ctx.strokeStyle = '#f43f5e';
         ctx.lineWidth = 2;
@@ -489,9 +485,8 @@
         ctx.stroke();
         ctx.setLineDash([]);
 
-        // Slice Marker Flag
         ctx.fillStyle = '#f43f5e';
-        ctx.fillRect(x - 6, 0, 12, 16);
+        ctx.fillRect(x - 8, 0, 16, 16);
         ctx.fillStyle = '#ffffff';
         ctx.font = '10px monospace';
         ctx.textAlign = 'center';
@@ -509,24 +504,52 @@
       ctx.stroke();
     }
 
-    // --- INTERACTIVE CANVAS CONTROLS ---
+    // --- INTERACTIVE SLICE AUDITION & CANVAS HANDLERS ---
     let isDragging = false;
+
+    function previewSliceAt(normX) {
+      stopPlayback();
+      const actx = getAudioContext();
+      
+      // Find start slice position
+      let startPos = 0;
+      let endPos = 1.0;
+
+      const sortedSlices = [...state.slices].sort((a, b) => a - b);
+      for (let i = 0; i < sortedSlices.length; i++) {
+        if (sortedSlices[i] <= normX) {
+          startPos = sortedSlices[i];
+          endPos = sortedSlices[i + 1] || 1.0;
+        }
+      }
+
+      const startTimeSec = startPos * state.duration;
+      const sliceDuration = (endPos - startPos) * state.duration;
+
+      state.playhead = startPos;
+      pauseOffset = startTimeSec;
+
+      if (state.audioBuffer) {
+        const drySource = actx.createBufferSource();
+        drySource.buffer = state.audioBuffer;
+        drySource.connect(actx.destination);
+        drySource.start(0, startTimeSec, sliceDuration);
+        activeNodes.push(drySource);
+      }
+      
+      render();
+    }
 
     canvas.addEventListener('mousedown', (e) => {
       const rect = canvas.getBoundingClientRect();
       const xNorm = (e.clientX - rect.left) / rect.width;
 
-      // Check if clicked close to existing slice line
       const sliceIdx = state.slices.findIndex(s => Math.abs(s - xNorm) < 0.015);
       if (sliceIdx !== -1) {
         state.draggedSliceIndex = sliceIdx;
         isDragging = true;
       } else {
-        // Move playhead
-        state.playhead = xNorm;
-        pauseOffset = state.playhead * state.duration;
-        if (state.isPlaying) playAudio();
-        render();
+        previewSliceAt(xNorm);
       }
     });
 
@@ -551,17 +574,31 @@
 
       const sliceIdx = state.slices.findIndex(s => Math.abs(s - xNorm) < 0.015);
       if (sliceIdx !== -1) {
-        // Remove Slice
-        state.slices.splice(sliceIdx, 1);
+        if (state.slices.length > 1) {
+          state.slices.splice(sliceIdx, 1);
+        }
       } else {
-        // Add Slice
         state.slices.push(xNorm);
         state.slices.sort((a, b) => a - b);
       }
       render();
     });
 
-    // --- AUDIO & HARMONY PLAYBACK ENGINE ---
+    // --- BUTTON CONTROLS ---
+    detectTransientsBtn.addEventListener('click', () => {
+      if (state.fileType === 'wav') autoDetectTransients();
+      if (state.fileType === 'midi') autoDetectMIDISlices();
+    });
+
+    clearSlicesBtn.addEventListener('click', () => {
+      state.slices = [0];
+      render();
+    });
+
+    function calculatePitchShift(semitones) {
+      return Math.pow(2, semitones / 12);
+    }
+
     function stopPlayback() {
       activeNodes.forEach(n => { try { n.stop(); } catch(e){} });
       activeNodes = [];
@@ -569,10 +606,6 @@
       cancelAnimationFrame(animationFrameId);
       playBtn.innerHTML = `<i data-lucide="play" class="w-6 h-6 fill-current"></i>`;
       lucide.createIcons();
-    }
-
-    function calculatePitchShift(semitones) {
-      return Math.pow(2, semitones / 12);
     }
 
     function playAudio() {
@@ -589,15 +622,13 @@
         dryGain.connect(actx.destination);
         harmGain.connect(actx.destination);
 
-        // Dry Source
         const drySource = actx.createBufferSource();
         drySource.buffer = state.audioBuffer;
         drySource.connect(dryGain);
         activeNodes.push(drySource);
 
-        // Pitch Harmonies Setup
         const intervals = [];
-        if (state.harmonies.h3rd) intervals.push(4); // Diatonic Major 3rd default
+        if (state.harmonies.h3rd) intervals.push(4);
         if (state.harmonies.h5th) intervals.push(7);
         if (state.harmonies.hOctave) intervals.push(-12);
 
@@ -613,34 +644,24 @@
         drySource.start(0, pauseOffset);
 
       } else if (state.fileType === 'midi' && state.midiData) {
-        // Synthetic MIDI Oscillator Playback
         const now = actx.currentTime;
-        const notes = state.midiData.notes;
-
-        notes.forEach(n => {
+        state.midiData.notes.forEach(n => {
           if (n.time >= pauseOffset) {
             const startAt = now + (n.time - pauseOffset);
-            
-            // Base Note + Active Harmonies
-            const semitoneLayers = [0];
-            if (state.harmonies.h3rd) semitoneLayers.push(4);
-            if (state.harmonies.h5th) semitoneLayers.push(7);
-            if (state.harmonies.hOctave) semitoneLayers.push(-12);
+            const intervals = [0];
+            if (state.harmonies.h3rd) intervals.push(4);
+            if (state.harmonies.h5th) intervals.push(7);
+            if (state.harmonies.hOctave) intervals.push(-12);
 
-            semitoneLayers.forEach(st => {
+            intervals.forEach(st => {
               const osc = actx.createOscillator();
               const gain = actx.createGain();
-              
-              const freq = 440 * Math.pow(2, (n.note + st - 69) / 12);
               osc.type = 'sawtooth';
-              osc.frequency.setValueAtTime(freq, startAt);
-
+              osc.frequency.setValueAtTime(440 * Math.pow(2, (n.note + st - 69) / 12), startAt);
               gain.gain.setValueAtTime(0.1, startAt);
               gain.gain.exponentialRampToValueAtTime(0.001, startAt + n.duration);
-
               osc.connect(gain);
               gain.connect(actx.destination);
-
               osc.start(startAt);
               osc.stop(startAt + n.duration);
               activeNodes.push(osc);
@@ -664,7 +685,6 @@
       
       state.playhead = elapsed / state.duration;
 
-      // Time Display Update
       const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');
       const secs = (elapsed % 60).toFixed(2).padStart(5, '0');
       currentTimeDisplay.textContent = `${mins}:${secs}`;
@@ -686,7 +706,7 @@
       }
     }
 
-    // --- BUTTON EVENT BINDINGS ---
+    // Transport Actions
     playBtn.addEventListener('click', () => {
       if (state.isPlaying) {
         pauseOffset = getAudioContext().currentTime - startTime;
@@ -707,20 +727,9 @@
     loopBtn.addEventListener('click', () => {
       state.isLooping = !state.isLooping;
       loopBtn.classList.toggle('text-indigo-400', state.isLooping);
-      loopBtn.classList.toggle('border-indigo-500', state.isLooping);
     });
 
-    detectTransientsBtn.addEventListener('click', () => {
-      if (state.fileType === 'wav') autoDetectTransients();
-      if (state.fileType === 'midi') autoDetectMIDISlices();
-    });
-
-    clearSlicesBtn.addEventListener('click', () => {
-      state.slices = [0];
-      render();
-    });
-
-    // Control Inputs
+    // Sliders
     mixSlider.addEventListener('input', (e) => {
       state.mix = parseFloat(e.target.value);
       mixValue.textContent = `${Math.round(state.mix * 100)}%`;
@@ -729,19 +738,17 @@
     threshSlider.addEventListener('input', (e) => {
       state.threshold = parseFloat(e.target.value);
       threshValue.textContent = state.threshold.toFixed(2);
+      if (state.fileType === 'wav') autoDetectTransients();
     });
 
     harm3rd.addEventListener('change', (e) => state.harmonies.h3rd = e.target.checked);
     harm5th.addEventListener('change', (e) => state.harmonies.h5th = e.target.checked);
     harmOctave.addEventListener('change', (e) => state.harmonies.hOctave = e.target.checked);
 
-    keySelect.addEventListener('change', (e) => state.key = e.target.value);
-    scaleSelect.addEventListener('change', (e) => state.scale = e.target.value);
-
-    // --- OFFLINE RENDER & WAV EXPORT ENGINE ---
+    // Export WAV
     exportBtn.addEventListener('click', async () => {
       if (!state.audioBuffer) {
-        alert("WAV Export is currently available for imported Audio tracks.");
+        alert("WAV Export is available for audio samples.");
         return;
       }
 
@@ -760,13 +767,11 @@
       dryGain.connect(offlineCtx.destination);
       harmGain.connect(offlineCtx.destination);
 
-      // Dry Layer
       const drySource = offlineCtx.createBufferSource();
       drySource.buffer = originalBuffer;
       drySource.connect(dryGain);
       drySource.start(0);
 
-      // Harmony Layers
       const intervals = [];
       if (state.harmonies.h3rd) intervals.push(4);
       if (state.harmonies.h5th) intervals.push(7);
@@ -790,37 +795,25 @@
       a.click();
     });
 
-    // AudioBuffer to PCM WAV Encoder
     function bufferToWave(abuffer, len) {
       let numOfChan = abuffer.numberOfChannels,
           length = len * numOfChan * 2 + 44,
           buffer = new ArrayBuffer(length),
           view = new DataView(buffer),
-          channels = [], i, sample,
-          offset = 0,
-          pos = 0;
+          channels = [], i, sample, pos = 0;
 
-      function setUint16(data) { view.getUint16(pos, true); view.setUint16(pos, data, true); pos += 2; }
-      function setUint32(data) { view.getUint32(pos, true); view.setUint32(pos, data, true); pos += 4; }
+      function setUint16(data) { view.setUint16(pos, data, true); pos += 2; }
+      function setUint32(data) { view.setUint32(pos, data, true); pos += 4; }
 
-      // WAV Header
-      setUint32(0x46464952); // "RIFF"
-      setUint32(length - 8); 
-      setUint32(0x45564157); // "WAVE"
-      setUint32(0x20746d66); // "fmt "
-      setUint32(16);         // length of format data
-      setUint16(1);          // PCM format
-      setUint16(numOfChan);
-      setUint32(abuffer.sampleRate);
-      setUint32(abuffer.sampleRate * 2 * numOfChan);
-      setUint16(numOfChan * 2);
-      setUint16(16);         // Bits per sample
-      setUint32(0x61746164); // "data"
+      setUint32(0x46464952); setUint32(length - 8); setUint32(0x45564157);
+      setUint32(0x20746d66); setUint32(16); setUint16(1); setUint16(numOfChan);
+      setUint32(abuffer.sampleRate); setUint32(abuffer.sampleRate * 2 * numOfChan);
+      setUint16(numOfChan * 2); setUint16(16); setUint32(0x61746164);
       setUint32(length - pos - 4);
 
-      for (i = 0; i < abuffer.numberOfChannels; i++)
-        channels.push(abuffer.getChannelData(i));
+      for (i = 0; i < abuffer.numberOfChannels; i++) channels.push(abuffer.getChannelData(i));
 
+      let offset = 0;
       while (pos < length) {
         for (i = 0; i < numOfChan; i++) {
           sample = Math.max(-1, Math.min(1, channels[i][offset]));
@@ -833,7 +826,6 @@
       return new Blob([buffer], { type: "audio/wav" });
     }
 
-    // Initial Layout Render
     resizeCanvas();
   </script>
 </body>
