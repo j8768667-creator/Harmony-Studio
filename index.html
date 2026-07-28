@@ -1,806 +1,136 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-   <meta charset="UTF-8">
-   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>AI Phase Vocoder & Harmony Slicer</title>
-   <!-- Tailwind CSS for UI structure -->
-   <script src="https://jsdelivr.net"></script>
-   <style>
-       body { background-color: #0f172a; color: #f8fafc; font-family: sans-serif; }
-       canvas { image-rendering: pixelated; }
-       .slider-thumb::-webkit-slider-thumb {
-           -webkit-appearance: none;
-           appearance: none;
-           width: 14px;
-           height: 14px;
-           border-radius: 50%;
-           background: #38bdf8;
-           cursor: pointer;
-       }
-   </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Harmonix</title>
+  <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
 </head>
-<body class="h-screen flex flex-col overflow-hidden">
+<body class="h-screen bg-slate-950 font-sans text-slate-100 flex flex-col justify-center items-center p-6">
 
-   <!-- Top Bar Header -->
-   <header class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex items-center justify-between">
-       <div class="flex items-center space-x-3">
-           <div class="w-8 h-8 rounded bg-sky-500 flex items-center justify-center font-bold text-slate-900">Ξ</div>
-           <h1 class="text-lg font-semibold tracking-wide">Harmonix Studio <span class="text-xs text-sky-400 font-mono">v2.0 PRO</span></h1>
-       </div>
-       
-       <div class="flex items-center space-x-4">
-           <label class="flex items-center space-x-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 px-4 py-2 rounded-lg cursor-pointer transition text-sm">
-               <span>Upload WAV / MIDI</span>
-               <input type="file" id="fileInput" accept=".wav,.mid,.midi" class="hidden">
-           </label>
-           <div id="fileInfo" class="text-xs text-slate-400 font-mono max-w-xs truncate">No file loaded</div>
-       </div>
-   </header>
+  <main class="w-full max-w-md bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-2xl space-y-6">
+    <header class="text-center">
+      <h1 class="text-3xl font-extrabold tracking-tight text-indigo-400">Harmonix</h1>
+      <p class="text-sm text-slate-400 mt-1">Audio Sample Engine</p>
+    </header>
 
-   <!-- Main Workspace -->
-   <div class="flex-1 flex overflow-hidden">
-       
-       <!-- Left Panel: Interactive Visualizer Canvas -->
-       <main class="flex-1 flex flex-col bg-slate-950 p-6 relative overflow-hidden">
-           <div class="flex items-center justify-between mb-2">
-               <span id="visualizerTitle" class="text-xs font-mono uppercase tracking-wider text-slate-400">Visualizer Workspace</span>
-               <span class="text-[10px] text-slate-500 font-mono">Click inside a slice zone to solo loop • Double-click to split • Drag lines to move</span>
-           </div>
-           
-           <div class="flex-1 bg-slate-900 rounded-xl border border-slate-800 relative overflow-hidden flex items-center justify-center">
-               <canvas id="mainCanvas" class="absolute top-0 left-0 w-full h-full cursor-crosshair"></canvas>
-               <div id="dropPrompt" class="text-slate-500 text-sm font-medium z-10 pointer-events-none">Load an audio or MIDI file to begin advanced harmonisation</div>
-           </div>
-       </main>
+    <section class="space-y-4">
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Select Preset Sample</label>
+        <select id="sampleSelect" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+          <option value="synth-pad">Synth Pad (Generated C4)</option>
+          <option value="808-kick">808 Kick (Generated)</option>
+          <option value="hi-hat">Hi-Hat (Generated)</option>
+        </select>
+      </div>
 
-       <!-- Right Panel: Controls & Advanced DSP Engines -->
-       <aside class="w-80 bg-slate-900 border-l border-slate-800 p-6 flex flex-col space-y-6 overflow-y-auto">
-           <!-- Harmony Config -->
-           <div>
-               <h2 class="text-xs font-mono uppercase tracking-wider text-slate-400 mb-3">Harmony Config</h2>
-               <div class="space-y-3">
-                   <label class="block">
-                       <span class="text-xs text-slate-400 block mb-1">Interval Setup</span>
-                       <select id="harmonyInterval" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-sky-500">
-                           <option value="4">Major 3rd (+4 semitones)</option>
-                           <option value="3">Minor 3rd (+3 semitones)</option>
-                           <option value="7" selected>Perfect 5th (+7 semitones)</option>
-                           <option value="12">Octave Up (+12 semitones)</option>
-                           <option value="-12">Octave Down (-12 semitones)</option>
-                           <option value="0">Unison (0 semitones)</option>
-                       </select>
-                   </label>
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Or Upload Custom File</label>
+        <input type="file" id="audioFileInput" accept="audio/*" class="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer"/>
+      </div>
+    </section>
 
-                   <label class="block">
-                       <span class="text-xs text-slate-400 block mb-1">Scale Snap Heuristic</span>
-                       <select id="scaleSnap" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-sky-500">
-                           <option value="chromatic">Chromatic (Fixed Offset)</option>
-                           <option value="major">Smart Snap (Major Scale)</option>
-                       </select>
-                   </label>
-               </div>
-           </div>
+    <section class="pt-2">
+      <button id="playBtn" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 font-semibold rounded-lg shadow-lg transition-all flex items-center justify-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
+        </svg>
+        Play Sample
+      </button>
+    </section>
 
-           <!-- Synth & DSP Timbre Engines -->
-           <div>
-               <h2 class="text-xs font-mono uppercase tracking-wider text-slate-400 mb-3">Timbre & Synthesis Engine</h2>
-               <div class="space-y-3">
-                   <label class="block">
-                       <span class="text-xs text-slate-400 block mb-1">MIDI Synth Architecture</span>
-                       <select id="synthWaveform" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-sky-500">
-                           <option value="sine">Pure Sine Wave</option>
-                           <option value="triangle" selected>Analog Triangle</option>
-                           <option value="sawtooth">Aggressive Sawtooth</option>
-                           <option value="square">Vintage Square Wave</option>
-                       </select>
-                   </label>
-                   <div class="text-[10px] text-slate-500 italic font-mono leading-tight">
-                       WAV processing utilizes real-time mathematical Phase Vocoding to decouple target pitch values from duration elements.
-                   </div>
-               </div>
-           </div>
+    <footer class="text-center pt-2 border-t border-slate-800">
+      <span id="statusText" class="text-xs text-emerald-400 font-mono">Status: Ready</span>
+    </footer>
+  </main>
 
-           <!-- Slicing Detection Properties -->
-           <div>
-               <h2 class="text-xs font-mono uppercase tracking-wider text-slate-400 mb-3">Slicing Sensitivity</h2>
-               <div class="space-y-4">
-                   <div>
-                       <div class="flex justify-between text-xs text-slate-400 mb-1">
-                           <span>Onset Energy Threshold</span>
-                           <span id="thresholdVal">0.15</span>
-                       </div>
-                       <input type="range" id="thresholdSlider" min="0.05" max="0.8" step="0.01" value="0.15" class="w-full accent-sky-500 bg-slate-800 rounded-lg h-1 appearance-none slider-thumb">
-                   </div>
-               </div>
-           </div>
+  <script>
+    // Web Audio API Initialization
+    let audioCtx = null;
+    let currentBuffer = null;
 
-           <!-- Multi-track Mixer -->
-           <div class="flex-1">
-               <h2 class="text-xs font-mono uppercase tracking-wider text-slate-400 mb-3">Mixer Blocks</h2>
-               <div class="space-y-4">
-                   <div>
-                       <div class="flex justify-between text-xs text-slate-400 mb-1">
-                           <span>Original Signal</span>
-                           <span id="origVolVal">100%</span>
-                       </div>
-                       <input type="range" id="origVol" min="0" max="1" step="0.01" value="1" class="w-full accent-sky-500 bg-slate-800 rounded-lg h-1 appearance-none slider-thumb">
-                   </div>
-                   <div>
-                       <div class="flex justify-between text-xs text-slate-400 mb-1">
-                           <span>Harmony Engine</span>
-                           <span id="harmVolVal">80%</span>
-                       </div>
-                       <input type="range" id="harmVol" min="0" max="1" step="0.01" value="0.8" class="w-full accent-sky-500 bg-slate-800 rounded-lg h-1 appearance-none slider-thumb">
-                   </div>
-               </div>
-           </div>
+    const playBtn = document.getElementById('playBtn');
+    const sampleSelect = document.getElementById('sampleSelect');
+    const fileInput = document.getElementById('audioFileInput');
+    const statusText = document.getElementById('statusText');
 
-           <!-- Exporter -->
-           <div class="pt-4 border-t border-slate-800">
-               <button id="exportBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-slate-900 font-bold py-2 px-4 rounded-lg text-sm transition shadow-lg">
-                   Export Project Data
-               </button>
-           </div>
-       </aside>
-   </div>
+    function initAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
 
-   <!-- Bottom Bar Transport Controls -->
-   <footer class="bg-slate-900 border-t border-slate-800 px-6 py-4 flex items-center justify-between">
-       <div class="flex items-center space-x-3">
-           <button id="playBtn" class="bg-sky-500 hover:bg-sky-400 text-slate-900 px-5 py-2 rounded-lg text-sm font-semibold transition disabled:opacity-50" disabled>Play All</button>
-           <button id="stopBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-5 py-2 rounded-lg text-sm font-semibold transition disabled:opacity-50" disabled>Stop</button>
-       </div>
+    // Generate Synthetic Audio Samples to bypass external URL/CORS issues
+    function createSyntheticBuffer(type) {
+      initAudioContext();
+      const sampleRate = audioCtx.sampleRate;
+      let duration = 1.0;
+      let buffer = audioCtx.createBuffer(1, sampleRate * duration, sampleRate);
+      let data = buffer.getChannelData(0);
 
-       <!-- Progress Timeline Tracker -->
-       <div class="flex-1 max-w-2xl mx-8 flex items-center space-x-3">
-           <span id="timeCurrent" class="text-xs font-mono text-slate-400">0:00.0</span>
-           <div id="timelineProgressContainer" class="flex-1 bg-slate-800 h-2 rounded-full relative cursor-pointer">
-               <div id="timelineProgressBar" class="bg-sky-500 h-full w-0 rounded-full transition-all duration-75"></div>
-           </div>
-           <span id="timeTotal" class="text-xs font-mono text-slate-400">0:00.0</span>
-       </div>
+      if (type === 'synth-pad') {
+        for (let i = 0; i < buffer.length; i++) {
+          let t = i / sampleRate;
+          data[i] = Math.sin(2 * Math.PI * 261.63 * t) * Math.exp(-1.5 * t); // C4 Note Decay
+        }
+      } else if (type === '808-kick') {
+        for (let i = 0; i < buffer.length; i++) {
+          let t = i / sampleRate;
+          let freq = 150 * Math.exp(-20 * t);
+          data[i] = Math.sin(2 * Math.PI * freq * t) * Math.exp(-5 * t);
+        }
+      } else if (type === 'hi-hat') {
+        for (let i = 0; i < buffer.length; i++) {
+          let t = i / sampleRate;
+          data[i] = (Math.random() * 2 - 1) * Math.exp(-30 * t);
+        }
+      }
+      return buffer;
+    }
 
-       <div class="flex items-center space-x-2 text-xs font-mono text-slate-500">
-           <span>Status:</span>
-           <span id="statusIndicator" class="text-amber-400">Idle</span>
-       </div>
-   </footer>
+    // Play currently loaded audio buffer
+    function playBuffer(buffer) {
+      if (!buffer) return;
+      const source = audioCtx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(audioCtx.destination);
+      source.start(0);
+    }
 
-   <!-- App Engine Logic -->
-   <script>
-       let audioContext = null;
-       let audioBuffer = null;
-       let midiData = null;
-       let fileType = null;
-       
-       let slices = [];
-       let duration = 0;
-       let isPlaying = false;
-       let startTime = 0;
-let pausedTime = 0;
-let playTimeout = null;
-let animationFrameId = null;
-let activeSources = [];
-let masterOrigGain = null;
-let masterHarmGain = null;
-let selectedSliceIndex = -1;
-let isDraggingSlice = false;
-// Solo loop tracking references
-let isSoloLoopMode = false;
-let soloLoopStart = 0;
-let soloLoopEnd = 0;
-// DOM Nodes Elements Cache mapping
-const fileInput = document.getElementById('fileInput');
-const fileInfo = document.getElementById('fileInfo');
-const canvas = document.getElementById('mainCanvas');
-const ctx = canvas.getContext('2d');
-const dropPrompt = document.getElementById('dropPrompt');
-const visualizerTitle = document.getElementById('visualizerTitle');
-const statusIndicator = document.getElementById('statusIndicator');
-const playBtn = document.getElementById('playBtn');
-const stopBtn = document.getElementById('stopBtn');
-const timeCurrent = document.getElementById('timeCurrent');
-const timeTotal = document.getElementById('timeTotal');
-const timelineProgressBar = document.getElementById('timelineProgressBar');
-const timelineProgressContainer = document.getElementById('timelineProgressContainer');
-const thresholdSlider = document.getElementById('thresholdSlider');
-const thresholdVal = document.getElementById('thresholdVal');
-const harmonyInterval = document.getElementById('harmonyInterval');
-const scaleSnap = document.getElementById('scaleSnap');
-const synthWaveform = document.getElementById('synthWaveform');
-const origVol = document.getElementById('origVol');
-const harmVol = document.getElementById('harmVol');
-const origVolVal = document.getElementById('origVolVal');
-const harmVolVal = document.getElementById('harmVolVal');
-const exportBtn = document.getElementById('exportBtn');
-function initAudioEngine() {
-if (!audioContext) {
-audioContext = new (window.AudioContext || window.webkitAudioContext)();
-masterOrigGain = audioContext.createGain();
-masterHarmGain = audioContext.createGain();
-masterOrigGain.gain.value = parseFloat(origVol.value);
-masterHarmGain.gain.value = parseFloat(harmVol.value);
-masterOrigGain.connect(audioContext.destination);
-masterHarmGain.connect(audioContext.destination);
-}
-}
-function resizeCanvas() {
-canvas.width = canvas.parentElement.clientWidth;
-canvas.height = canvas.parentElement.clientHeight;
-drawWorkspace();
-}
-window.addEventListener('resize', resizeCanvas);
-setTimeout(resizeCanvas, 100);
-fileInput.addEventListener('change', async (e) => {
-const file = e.target.files[0];
-if (!file) return;
-stopPlayback();
-initAudioEngine();
-fileInfo.textContent = ${file.name} (${(file.size/1024/1024).toFixed(2)} MB);
-dropPrompt.style.display = 'none';
-statusIndicator.textContent = 'Parsing...';
-statusIndicator.className = 'text-amber-400';
-if (file.name.toLowerCase().endsWith('.wav')) {
-fileType = 'wav';
-visualizerTitle.textContent = "WAV Waveform Display";
-const arrayBuffer = await file.arrayBuffer();
-audioContext.decodeAudioData(arrayBuffer, (buffer) => {
-audioBuffer = buffer;
-midiData = null;
-duration = buffer.duration;
-calculateWavSlices();
-readyPlayback();
-}, () => {
-alert("Error processing file framework constraints.");
-statusIndicator.textContent = 'Error';
-});
-} else if (file.name.toLowerCase().endsWith('.mid') || file.name.toLowerCase().endsWith('.midi')) {
-fileType = 'midi';
-visualizerTitle.textContent = "MIDI Streaming Editor";
-const arrayBuffer = await file.arrayBuffer();
-parseMidiData(arrayBuffer);
-readyPlayback();
-}
-});
-function calculateWavSlices() {
-if (!audioBuffer) return;
-const rawData = audioBuffer.getChannelData(0);
-const sampleRate = audioBuffer.sampleRate;
-const threshold = parseFloat(thresholdSlider.value);
-slices =;
-const windowSize = Math.floor(sampleRate * 0.05);
-let lastTransientTime = 0;
-const minSliceDuration = 0.20;
-for (let i = 0; i < rawData.length; i += windowSize) {
-let energy = 0;
-for (let j = 0; j < windowSize && (i + j) < rawData.length; j++) {
-energy += Math.abs(rawData[i + j]);
-}
-energy /= windowSize;
-if (energy > threshold) {
-const currentTime = i / sampleRate;
-if (currentTime - lastTransientTime > minSliceDuration) {
-slices.push(parseFloat(currentTime.toFixed(3)));
-lastTransientTime = currentTime;
-}
-}
-}
-slices.sort((a, b) => a - b);
-drawWorkspace();
-}
-function parseMidiData(buffer) {
-const view = new DataView(buffer);
-let ptr = 0;
-const magic = view.getUint32(ptr); ptr += 4;
-if (magic !== 0x4D546864) return;
-ptr += 4;
-const format = view.getUint16(ptr); ptr += 2;
-const numTracks = view.getUint16(ptr); ptr += 2;
-const ticksPerBeat = view.getUint16(ptr); ptr += 2;
-midiData = { notes: [], totalTicks: 0, ticksPerBeat: ticksPerBeat };
-slices =;
-let globalMicrosecondsPerBeat = 500000;
-for (let t = 0; t < numTracks; t++) {
-if (ptr >= view.byteLength) break;
-const trackMagic = view.getUint32(ptr); ptr += 4;
-const trackLen = view.getUint32(ptr); ptr += 4;
-const trackEnd = ptr + trackLen;
-let currentTick = 0;
-let activeNotes = {};
-while (ptr < trackEnd && ptr < view.byteLength) {
-let delta = 0;
-while (true) {
-let b = view.getUint8(ptr++);
-delta = (delta << 7) | (b & 0x7F);
-if (!(b & 0x80)) break;
-}
-currentTick += delta;
-let status = view.getUint8(ptr++);
-if (status === 0xFF) {
-let metaType = view.getUint8(ptr++);
-let len = 0;
-while (true) {
-let b = view.getUint8(ptr++);
-len = (len << 7) | (b & 0x7F);
-if (!(b & 0x80)) break;
-}
-if (metaType === 0x51) {
-globalMicrosecondsPerBeat = (view.getUint8(ptr) << 16) | (view.getUint8(ptr+1) << 8) | view.getUint8(ptr+2);
-}
-ptr += len;
-} else if (status === 0xF0 || status === 0xF7) {
-let len = 0;
-while (true) {
-let b = view.getUint8(ptr++);
-len = (len << 7) | (b & 0x7F);
-if (!(b & 0x80)) break;
-}
-ptr += len;
-} else {
-let type = status & 0xF0;
-let data1 = view.getUint8(ptr++);
-let data2 = (type !== 0xC0 && type !== 0xD0) ? view.getUint8(ptr++) : 0;
-const secPerTick = (globalMicrosecondsPerBeat / 1000000) / ticksPerBeat;
-const timeInSecs = currentTick * secPerTick;
-if (type === 0x90 && data2 > 0) {
-activeNotes[data1] = { start: timeInSecs, vel: data2 };
-if (!slices.includes(parseFloat(timeInSecs.toFixed(3)))) {
-slices.push(parseFloat(timeInSecs.toFixed(3)));
-}
-} else if (type === 0x80 || (type === 0x90 && data2 === 0)) {
-if (activeNotes[data1]) {
-midiData.notes.push({
-pitch: data1,
-start: activeNotes[data1].start,
-end: timeInSecs,
-velocity: activeNotes[data1].vel
-});
-delete activeNotes[data1];
-}
-}
-}
-}
-ptr = trackEnd;
-}
-if(midiData.notes.length > 0) {
-duration = Math.max(...midiData.notes.map(n => n.end)) + 1.0;
-} else {
-duration = 10.0;
-}
-slices = [...new Set(slices)].sort((a, b) => a - b);
-drawWorkspace();
-}
-function readyPlayback() {
-playBtn.disabled = false;
-stopBtn.disabled = false;
-statusIndicator.textContent = 'Ready';
-statusIndicator.className = 'text-emerald-400';
-timeTotal.textContent = formatTime(duration);
-timeCurrent.textContent = "0:00.0";
-timelineProgressBar.style.width = "0%";
-pausedTime = 0;
-}
-function drawWorkspace() {
-ctx.clearRect(0, 0, canvas.width, canvas.height);
-if (duration === 0) return;
-// Draw slice highlight bounds if a solo loop region matches
-if (isSoloLoopMode) {
-const xStart = (soloLoopStart / duration) * canvas.width;
-const xEnd = (soloLoopEnd / duration) * canvas.width;
-ctx.fillStyle = 'rgba(244, 63, 94, 0.12)';
-ctx.fillRect(xStart, 0, xEnd - xStart, canvas.height);
-}
-if (fileType === 'wav' && audioBuffer) {
-ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
-ctx.lineWidth = 1;
-const data = audioBuffer.getChannelData(0);
-const step = Math.ceil(data.length / canvas.width);
-const amp = canvas.height / 2;
-ctx.beginPath();
-for (let i = 0; i < canvas.width; i++) {
-let min = 1.0; let max = -1.0;
-for (let j = 0; j < step; j++) {
-const dat = data[(i * step) + j];
-if (dat < min) min = dat;
-if (dat > max) max = dat;
-}
-ctx.moveTo(i, amp + (min * amp));
-ctx.lineTo(i, amp + (max * amp));
-}
-ctx.stroke();
-} else if (fileType === 'midi' && midiData) {
-ctx.fillStyle = 'rgba(129, 140, 248, 0.4)';
-const pitches = midiData.notes.map(n => n.pitch);
-const maxPitch = Math.max(...pitches, 72);
-const minPitch = Math.min(...pitches, 48);
-const pitchRange = (maxPitch - minPitch) || 12;
-midiData.notes.forEach(note => {
-const x = (note.start / duration) * canvas.width;
-const w = ((note.end - note.start) / duration) * canvas.width;
-const h = canvas.height / (pitchRange + 4);
-const y = canvas.height - ((note.pitch - minPitch + 2) * h);
-ctx.fillRect(x, y, w || 2, h - 1);
-});
-}
-// Slices Markers System Canvas Paint Engine
-slices.forEach((sliceTime, idx) => {
-const x = (sliceTime / duration) * canvas.width;
-ctx.strokeStyle = (idx === selectedSliceIndex) ? '#f43f5e' : '#10b981';
-ctx.lineWidth = (idx === selectedSliceIndex) ? 2.5 : 1.5;
-ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
-ctx.fillStyle = (idx === selectedSliceIndex) ? '#f43f5e' : '#10b981';
-ctx.font = '9px monospace';
-ctx.fillText(S-${idx}, x + 4, 12);
-});
-if (isPlaying || pausedTime > 0) {
-const curTime = isPlaying ? (audioContext.currentTime - startTime + pausedTime) : pausedTime;
-const playX = (curTime / duration) * canvas.width;
-ctx.strokeStyle = '#e11d48'; ctx.lineWidth = 2;
-ctx.beginPath(); ctx.moveTo(playX, 0); ctx.lineTo(playX, canvas.height); ctx.stroke();
-}
-}
-thresholdSlider.addEventListener('input', (e) => {
-thresholdVal.textContent = e.target.value;
-if (fileType === 'wav') calculateWavSlices();
-});
-origVol.addEventListener('input', (e) => {
-origVolVal.textContent = Math.round(e.target.value * 100) + '%';
-if (masterOrigGain) masterOrigGain.gain.value = parseFloat(e.target.value);
-});
-harmVol.addEventListener('input', (e) => {
-harmVolVal.textContent = Math.round(e.target.value * 100) + '%';
-if (masterHarmGain) masterHarmGain.gain.value = parseFloat(e.target.value);
-});
-playBtn.addEventListener('click', () => {
-isSoloLoopMode = false;
-if (isPlaying) pausePlayback(); else startPlayback();
-});
-stopBtn.addEventListener('click', stopPlayback);
-function startPlayback() {
-if (isPlaying) return;
-initAudioEngine();
-if (audioContext.state === 'suspended') audioContext.resume();
-isPlaying = true;
-playBtn.textContent = 'PauseAll';
-statusIndicator.textContent = isSoloLoopMode ? 'Solo Looping' : 'Playing';
-statusIndicator.className = 'text-sky-400';
-startTime = audioContext.currentTime;
-const targetOffset = isSoloLoopMode ? soloLoopStart : pausedTime;
-if (fileType === 'wav') playWavEngine(targetOffset);
-else if (fileType === 'midi') playMidiEngine(targetOffset);
-animateTimeline();
-}
-function pausePlayback() {
-if (!isPlaying) return;
-isPlaying = false;
-playBtn.textContent = 'Play All';
-statusIndicator.textContent = 'Paused';
-statusIndicator.className = 'text-amber-400';
-if (!isSoloLoopMode) {
-pausedTime += (audioContext.currentTime - startTime);
-}
-clearTimeout(playTimeout);
-cancelAnimationFrame(animationFrameId);
-killActiveSources();
-}
-function stopPlayback() {
-isPlaying = false;
-isSoloLoopMode = false;
-playBtn.textContent = 'Play All';
-statusIndicator.textContent = 'Stopped';
-statusIndicator.className = 'text-slate-400';
-pausedTime = 0;
-clearTimeout(playTimeout);
-cancelAnimationFrame(animationFrameId);
-killActiveSources();
-timeCurrent.textContent = "0:00.0";
-timelineProgressBar.style.width = "0%";
-drawWorkspace();
-}
-function killActiveSources() {
-activeSources.forEach(src => { try { src.stop(); } catch(e){} });
-activeSources = [];
-}
-/*
-* Real-Time Client-Side Mathematical Phase Vocoder Pitch Shifter
-* Decouples pitch shifting manipulation from timeline compression or elongation
-*/
-function playWavEngine(offset) {
-killActiveSources();
-// Channel 1: Clean Native Buffer Channel Node
-const origSource = audioContext.createBufferSource();
-origSource.buffer = audioBuffer;
-origSource.connect(masterOrigGain);
-// Channel 2: Advanced Phase-Vocoded Resynthesized Channel Array Buffer
-const semitones = parseInt(harmonyInterval.value);
-let finalSemitoneShift = semitones;
-if (scaleSnap.value === 'major') {
-finalSemitoneShift = snapToMajorScale(60 + semitones) - 60;
-}
-const pitchRatio = Math.pow(2, finalSemitoneShift / 12);
-// Run Phase Vocoder processing tasks to generate a target pitch-shifted buffer
-const processedBuffer = phaseVocodeBuffer(audioBuffer, pitchRatio);
-const harmSource = audioContext.createBufferSource();
-harmSource.buffer = processedBuffer;
-harmSource.connect(masterHarmGain);
-// Trigger engines synchronously
-if (isSoloLoopMode) {
-const sliceLen = soloLoopEnd - soloLoopStart;
-origSource.start(0, soloLoopStart, sliceLen);
-// The vocoded buffer length scales with pitchRatio to maintain duration consistency
-harmSource.start(0, soloLoopStart * pitchRatio, sliceLen * pitchRatio);
-playTimeout = setTimeout(() => {
-killActiveSources();
-isPlaying = false;
-startPlayback(); // Trigger the solo loop again
-}, sliceLen * 1000);
-} else {
-origSource.start(0, offset);
-harmSource.start(0, offset * pitchRatio);
-const remainingTime = duration - offset;
-playTimeout = setTimeout(() => stopPlayback(), remainingTime * 1000);
-}
-activeSources.push(origSource, harmSource);
-}
-// Mathematical Phase Vocoding Engine implementation pattern
-function phaseVocodeBuffer(sourceBuffer, pitchRatio) {
-const sampleRate = sourceBuffer.sampleRate;
-const originalChannelData = sourceBuffer.getChannelData(0);
-// STFT/FFT parameters
-const fftSize = 1024;
-const hopLength = 256;
-// To adjust pitch while preserving duration:
-// Resample the audio using an altered hop step size, then playback at normal speed.
-const targetHopLength = Math.round(hopLength * pitchRatio);
-// Dynamic allocation size properties mapping rules
-const outputLength = Math.ceil(originalChannelData.length / pitchRatio) + fftSize;
-const outputData = new Float32Array(outputLength);
-let inputPtr = 0;
-let outputPtr = 0;
-// Synthesis Phase State Trackers
-let lastInputPhase = new Float32Array(fftSize);
-let lastOutputPhase = new Float32Array(fftSize);
-const windowFn = new Float32Array(fftSize);
-for(let i=0; i<fftSize; i++) {
-windowFn[i] = 0.5 * (1 - Math.cos((2 * Math.PI * i) / (fftSize - 1))); // Hanning Window
-}
-while (inputPtr + fftSize < originalChannelData.length) {
-// Extract frame and apply windowing
-const fftFrame = new Float32Array(fftSize);
-for (let i = 0; i < fftSize; i++) {
-fftFrame[i] = originalChannelData[inputPtr + i] * windowFn[i];
-}
-// Inline Real FFT Heuristic Approximation Framework
-const spectrumMagnitude = new Float32Array(fftSize / 2);
-const spectrumPhase = new Float32Array(fftSize / 2);
-for (let k = 0; k < fftSize / 2; k++) {
-let real = 0; let imag = 0;
-for (let n = 0; n < fftSize; n++) {
-let angle = (2 * Math.PI * k * n) / fftSize;
-real += fftFrame[n] * Math.cos(angle);
-imag -= fftFrame[n] * Math.sin(angle);
-}
-spectrumMagnitude[k] = Math.sqrt(real * real + imag * imag);
-spectrumPhase[k] = Math.atan2(imag, real);
-}
-// Phase Vocoder Phase Unwrapping Engine
-const synthesizedPhase = new Float32Array(fftSize / 2);
-for (let k = 0; k < fftSize / 2; k++) {
-let phaseDiff = spectrumPhase[k] - lastInputPhase[k];
-let expectedPhaseDiff = (2 * Math.PI * hopLength * k) / fftSize;
-let deltaPhase = phaseDiff - expectedPhaseDiff;
-// Wrap phase variations boundary values safely inside [-PI, +PI]
-deltaPhase = Math.atan2(Math.sin(deltaPhase), Math.cos(deltaPhase));
-let trueFrequency = (k * 2 * Math.PI / fftSize) + (deltaPhase / hopLength);
-synthesizedPhase[k] = lastOutputPhase[k] + targetHopLength * trueFrequency;
-lastInputPhase[k] = spectrumPhase[k];
-lastOutputPhase[k] = synthesizedPhase[k];
-}
-// Inverse FFT Reconstruction
-const reconstructedFrame = new Float32Array(fftSize);
-for (let n = 0; n < fftSize; n++) {
-let sum = 0;
-for (let k = 0; k < fftSize / 2; k++) {
-sum += spectrumMagnitude[k] * Math.cos(synthesizedPhase[k] - (2 * Math.PI * k * n) / fftSize);
-}
-reconstructedFrame[n] = (sum / (fftSize / 2)) * windowFn[n];
-}
-// Overlap-Add Step
-for (let i = 0; i < fftSize; i++) {
-if (outputPtr + i < outputData.length) {
-outputData[outputPtr + i] += reconstructedFrame[i];
-}
-}
-inputPtr += hopLength;
-outputPtr += targetHopLength;
-}
-// Create client-ready Web Audio Buffer
-const newAudioBuffer = audioContext.createBuffer(1, outputData.length, sampleRate);
-newAudioBuffer.copyToChannel(outputData, 0);
-return newAudioBuffer;
-}
-// MIDI Engine supporting variable Waveform Oscillators
-function playMidiEngine(offset) {
-killActiveSources();
-const now = audioContext.currentTime;
-const chosenWave = synthWaveform.value;
-midiData.notes.forEach(note => {
-if (note.start >= offset) {
-if (isSoloLoopMode && note.end > soloLoopEnd) return; // boundary check
-const delay = note.start - offset;
-const durationOfNote = note.end - note.start;
-// Original Channel note
-const origOsc = audioContext.createOscillator();
-const origGain = audioContext.createGain();
-origOsc.type = chosenWave;
-origOsc.frequency.value = midiNoteToFreq(note.pitch);
-origGain.gain.setValueAtTime((note.velocity/127) * 0.15, now + delay);
-origGain.gain.exponentialRampToValueAtTime(0.001, now + delay + durationOfNote);
-origOsc.connect(origGain); origGain.connect(masterOrigGain);
-origOsc.start(now + delay); origOsc.stop(now + delay + durationOfNote);
-activeSources.push(origOsc);
-// Harmony Channel note
-let targetPitch = note.pitch + parseInt(harmonyInterval.value);
-if (scaleSnap.value === 'major') targetPitch = snapToMajorScale(targetPitch);
-const harmOsc = audioContext.createOscillator();
-const harmGain = audioContext.createGain();
-harmOsc.type = chosenWave;
-harmOsc.frequency.value = midiNoteToFreq(targetPitch);
-harmGain.gain.setValueAtTime((note.velocity/127) * 0.12, now + delay);
-harmGain.gain.exponentialRampToValueAtTime(0.001, now + delay + durationOfNote);
-harmOsc.connect(harmGain); harmGain.connect(masterHarmGain);
-harmOsc.start(now + delay); harmOsc.stop(now + delay + durationOfNote);
-activeSources.push(harmOsc);
-}
-});
-if (isSoloLoopMode) {
-const sliceLen = soloLoopEnd - soloLoopStart;
-playTimeout = setTimeout(() => {
-killActiveSources();
-isPlaying = false;
-startPlayback();
-}, sliceLen * 1000);
-} else {
-const remainingTime = duration - offset;
-playTimeout = setTimeout(() => stopPlayback(), remainingTime * 1000);
-}
-}
-function snapToMajorScale(noteNumber) {
-const majorScaleOffsets =;
-const pitchClass = noteNumber % 12;
-const octave = Math.floor(noteNumber / 12);
-let closest = majorScaleOffsets[0];
-let minDiff = 100;
-majorScaleOffsets.forEach(offset => {
-let diff = Math.abs(pitchClass - offset);
-if(diff < minDiff) { minDiff = diff; closest = offset; }
-});
-return (octave * 12) + closest;
-}
-function midiNoteToFreq(note) {
-return 440 * Math.pow(2, (note - 69) / 12);
-}
-function animateTimeline() {
-if (!isPlaying) return;
-let curTime = audioContext.currentTime - startTime + (isSoloLoopMode ? soloLoopStart : pausedTime);
-if (isSoloLoopMode && curTime > soloLoopEnd) {
-curTime = soloLoopEnd;
-}
-if (curTime <= duration) {
-timeCurrent.textContent = formatTime(curTime);
-timelineProgressBar.style.width = ${(curTime / duration) * 100}%;
-drawWorkspace();
-animationFrameId = requestAnimationFrame(animateTimeline);
-}
-}
-function formatTime(secs) {
-const m = Math.floor(secs / 60);
-const s = (secs % 60).toFixed(1);
-return ${m}:${s < 10 ? '0' : ''}${s};
-}
-// Click Handling: Differentiates Solo Zone Click vs Boundary Drags
-canvas.addEventListener('mousedown', (e) => {
-if (duration === 0) return;
-const rect = canvas.getBoundingClientRect();
-const clickX = e.clientX - rect.left;
-const clickTime = (clickX / canvas.width) * duration;
-const tolerance = 0.02 * duration;
-let foundIdx = -1;
-for (let i = 0; i < slices.length; i++) {
-if (Math.abs(slices[i] - clickTime) < tolerance) { foundIdx = i; break; }
-}
-if (e.button === 2) {
-e.preventDefault();
-if (foundIdx > 0) { slices.splice(foundIdx, 1); selectedSliceIndex = -1; drawWorkspace(); }
-return;
-}
-if (foundIdx !== -1) {
-selectedSliceIndex = foundIdx;
-isDraggingSlice = true;
-statusIndicator.textContent = Selected Slice Line ${foundIdx};
-} else {
-// If clicking away from a slice marker line, isolate and loop that slice block
-selectedSliceIndex = -1;
-determineAndTriggerSoloSliceBlock(clickTime);
-}
-});
-function determineAndTriggerSoloSliceBlock(clickTime) {
-let leftBoundary = 0;
-let rightBoundary = duration;
-for (let i = 0; i < slices.length; i++) {
-if (slices[i] <= clickTime) {
-leftBoundary = slices[i];
-}
-if (slices[i] > clickTime) {
-rightBoundary = slices[i];
-break;
-}
-}
-stopPlayback();
-isSoloLoopMode = true;
-soloLoopStart = leftBoundary;
-soloLoopEnd = rightBoundary;
-// Advance progress slider metrics manually to target visual block start point
-timeCurrent.textContent = formatTime(soloLoopStart);
-timelineProgressBar.style.width = ${(soloLoopStart / duration) * 100}%;
-startPlayback();
-}
-canvas.addEventListener('mousemove', (e) => {
-if (!isDraggingSlice || selectedSliceIndex === -1) return;
-const rect = canvas.getBoundingClientRect();
-const clickX = e.clientX - rect.left;
-let targetTime = (clickX / canvas.width) * duration;
-if (targetTime < 0) targetTime = 0;
-if (targetTime > duration) targetTime = duration;
-if (selectedSliceIndex === 0) targetTime = 0;
-slices[selectedSliceIndex] = parseFloat(targetTime.toFixed(3));
-slices.sort((a, b) => a - b);
-selectedSliceIndex = slices.indexOf(parseFloat(targetTime.toFixed(3)));
-drawWorkspace();
-});
-window.addEventListener('mouseup', () => isDraggingSlice = false);
-canvas.addEventListener('dblclick', (e) => {
-if (duration === 0) return;
-const rect = canvas.getBoundingClientRect();
-const clickX = e.clientX - rect.left;
-const clickTime = parseFloat(((clickX / canvas.width) * duration).toFixed(3));
-if (!slices.includes(clickTime)) {
-slices.push(clickTime);
-slices.sort((a, b) => a - b);
-selectedSliceIndex = slices.indexOf(clickTime);
-drawWorkspace();
-}
-});
-canvas.addEventListener('contextmenu', e => e.preventDefault());
-timelineProgressContainer.addEventListener('click', (e) => {
-if (duration === 0) return;
-const rect = timelineProgressContainer.getBoundingClientRect();
-const clickX = e.clientX - rect.left;
-const ratio = clickX / rect.width;
-const targetSeekTime = ratio * duration;
-const internalPlayingState = isPlaying;
-stopPlayback();
-pausedTime = targetSeekTime;
-timeCurrent.textContent = formatTime(pausedTime);
-timelineProgressBar.style.width = ${ratio * 100}%;
-if (internalPlayingState) startPlayback(); else drawWorkspace();
-});
-exportBtn.addEventListener('click', () => {
-if (duration === 0) return alert("No tracking session active.");
-const exportManifest = {
-studioProfile: "Phase Vocoder Pro Output Manifest",
-sourceType: fileType,
-synthArchitecture: synthWaveform.value,
-harmonyInterval: harmonyInterval.value,
-scaleSnapMode: scaleSnap.value,
-slicePointsTimeline: slices
-};
-const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportManifest, null, 4));
-const downloadAnchor = document.createElement('a');
-downloadAnchor.setAttribute("href", dataStr);
-downloadAnchor.setAttribute("download", "advanced_harmony_session.json");
-document.body.appendChild(downloadAnchor);
-downloadAnchor.click();
-downloadAnchor.remove();
-});
+    // Handle File Upload
+    fileInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      initAudioContext();
+      statusText.textContent = "Status: Loading File...";
+
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        currentBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+        statusText.textContent = `Status: Loaded "${file.name}"`;
+      } catch (err) {
+        statusText.textContent = "Status: Error Loading File";
+        console.error("Audio Decode Error:", err);
+      }
+    });
+
+    // Play Button Click Event
+    playBtn.addEventListener('click', () => {
+      initAudioContext();
+
+      if (fileInput.files.length > 0 && currentBuffer) {
+        playBuffer(currentBuffer);
+      } else {
+        const selectedType = sampleSelect.value;
+        const synthBuffer = createSyntheticBuffer(selectedType);
+        playBuffer(synthBuffer);
+        statusText.textContent = `Status: Playing ${selectedType}`;
+      }
+    });
+  </script>
+</body>
+</html>
