@@ -138,22 +138,16 @@
       position: relative;
       overflow: hidden;
       display: flex;
-      align-items: center;
+      align-items: flex-end;
       justify-content: space-around;
-      padding: 0 1rem;
+      padding: 1rem;
     }
 
-    /* Simulated Piano Roll Notes */
     .note-bar {
       width: 8%;
       background: linear-gradient(180deg, #818cf8 0%, var(--accent) 100%);
       border-radius: 4px;
-      animation: pulse 1.5s infinite alternate;
-    }
-
-    @keyframes pulse {
-      0% { opacity: 0.7; }
-      100% { opacity: 1; }
+      transition: height 0.3s ease;
     }
 
     .audio-player-container {
@@ -176,6 +170,9 @@
       background-color: transparent;
       border: 1px solid var(--border-color);
       color: var(--text-main);
+      text-decoration: none;
+      text-align: center;
+      line-height: 1.5;
     }
 
     .btn-secondary:hover {
@@ -210,11 +207,9 @@
         <div class="form-group">
           <label for="scale">Target Scale</label>
           <select id="scale">
-            <option value="auto">Auto-Detect Mood</option>
-            <option value="c-major">C Major</option>
-            <option value="a-minor">A Minor</option>
-            <option value="f-major">F Major</option>
-            <option value="e-minor">E Minor</option>
+            <option value="major">C Major Scale</option>
+            <option value="minor">A Minor Scale</option>
+            <option value="pentatonic">Major Pentatonic</option>
           </select>
         </div>
 
@@ -222,20 +217,11 @@
           <label for="tempo">Tempo (BPM)</label>
           <input type="number" id="tempo" value="120" min="60" max="200">
         </div>
-
-        <div class="form-group">
-          <label for="vocal-style">Guide Vocal Model</label>
-          <select id="vocal-style">
-            <option value="pop-female">Pop Female (Fast Synth)</option>
-            <option value="indie-male">Indie Male (Fast Synth)</option>
-            <option value="robot-neutral">Neutral Synth</option>
-          </select>
-        </div>
       </div>
 
       <div class="form-group" style="margin-bottom: 1.25rem;">
         <label for="lyrics">Enter Lyrics</label>
-        <textarea id="lyrics" placeholder="Type your lyrics here...&#10;e.g., Walking through the rain late at night"></textarea>
+        <textarea id="lyrics" placeholder="Type your lyrics here...&#10;e.g., Walking through the rain late at night">Walking through the rain late at night</textarea>
       </div>
 
       <button class="btn" id="generate-btn" onclick="generateMelody()">Generate MIDI & Audio</button>
@@ -246,35 +232,39 @@
       
       <div class="form-group">
         <label>Piano Roll Preview</label>
-        <div class="midi-visualizer">
-          <div class="note-bar" style="height: 40%;"></div>
-          <div class="note-bar" style="height: 60%;"></div>
-          <div class="note-bar" style="height: 35%;"></div>
-          <div class="note-bar" style="height: 80%;"></div>
-          <div class="note-bar" style="height: 65%;"></div>
-          <div class="note-bar" style="height: 50%;"></div>
-          <div class="note-bar" style="height: 75%;"></div>
-        </div>
+        <div class="midi-visualizer" id="visualizer"></div>
       </div>
 
       <div class="audio-player-container">
-        <label>Synthesized Guide Vocal (.WAV)</label>
-        <audio controls id="audio-player">
-          <source src="" type="audio/wav">
-          Your browser does not support the audio element.
-        </audio>
+        <label>Synthesized Audio Preview (.WAV)</label>
+        <audio controls id="audio-player"></audio>
       </div>
 
       <div class="download-group">
-        <button class="btn btn-secondary" onclick="alert('Exporting .MID file...')">Download MIDI (.mid)</button>
-        <button class="btn btn-secondary" onclick="alert('Exporting .WAV file...')">Download Vocal (.wav)</button>
+        <a id="midi-download" class="btn btn-secondary" href="#" download="melody.mid">Download MIDI (.mid)</a>
+        <a id="wav-download" class="btn btn-secondary" href="#" download="vocal_guide.wav">Download WAV (.wav)</a>
       </div>
     </div>
   </div>
 
   <script>
+    // Scale frequencies (Hz) mapping to pitch note values
+    const SCALES = {
+      major: [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25], // C Major
+      minor: [220.00, 246.94, 261.63, 293.66, 329.63, 349.23, 392.00, 440.00], // A Minor
+      pentatonic: [261.63, 293.66, 329.63, 392.00, 440.00, 523.25] // Pentatonic
+    };
+
+    const MIDI_NOTES = {
+      major: [60, 62, 64, 65, 67, 69, 71, 72],
+      minor: [57, 59, 60, 62, 64, 65, 67, 69],
+      pentatonic: [60, 62, 64, 67, 69, 72]
+    };
+
     function generateMelody() {
       const lyrics = document.getElementById('lyrics').value.trim();
+      const scaleType = document.getElementById('scale').value;
+      const bpm = parseInt(document.getElementById('tempo').value) || 120;
       const btn = document.getElementById('generate-btn');
       const resultsCard = document.getElementById('results-card');
 
@@ -283,19 +273,137 @@
         return;
       }
 
-      // Indicate loading state
-      btn.textContent = 'Processing Prosody & Generating...';
+      btn.textContent = 'Processing & Synthesizing...';
       btn.disabled = true;
 
-      // Simulate fast local processing delay
       setTimeout(() => {
+        // Simple syllabification logic (splits words into chunks)
+        const words = lyrics.split(/\s+/);
+        const notesFreq = [];
+        const notesMidi = [];
+        const scale = SCALES[scaleType];
+        const midiScale = MIDI_NOTES[scaleType];
+
+        words.forEach((word, index) => {
+          const syllables = word.match(/[^aeiouy]*[aeiouy]+(?:[^aeiouy]*$|[^aeiouy](?=[^aeiouy]))?/gi) || [word];
+          syllables.forEach((syl, sylIdx) => {
+            const pitchIndex = (word.length + sylIdx + index * 2) % scale.length;
+            notesFreq.push(scale[pitchIndex]);
+            notesMidi.push(midiScale[pitchIndex]);
+          });
+        });
+
+        // Update Visualizer UI
+        const visualizer = document.getElementById('visualizer');
+        visualizer.innerHTML = '';
+        notesFreq.forEach(freq => {
+          const bar = document.createElement('div');
+          bar.className = 'note-bar';
+          const heightPercent = Math.min(100, Math.max(20, (freq / 550) * 100));
+          bar.style.height = `${heightPercent}%`;
+          visualizer.appendChild(bar);
+        });
+
+        // Synthesize WAV audio in memory
+        const wavBlob = createWavAudioBlob(notesFreq, bpm);
+        const wavUrl = URL.createObjectURL(wavBlob);
+
+        const audioPlayer = document.getElementById('audio-player');
+        audioPlayer.src = wavUrl;
+
+        document.getElementById('wav-download').href = wavUrl;
+
+        // Generate MIDI Blob
+        const midiBlob = createMidiFileBlob(notesMidi, bpm);
+        document.getElementById('midi-download').href = URL.createObjectURL(midiBlob);
+
         btn.textContent = 'Generate MIDI & Audio';
         btn.disabled = false;
         resultsCard.classList.add('active');
-        
-        // Scroll smoothly to results
         resultsCard.scrollIntoView({ behavior: 'smooth' });
-      }, 1000);
+      }, 500);
+    }
+
+    // Helper: Create functional WAV file in browser
+    function createWavAudioBlob(notesFreq, bpm) {
+      const sampleRate = 22050;
+      const noteDuration = (60 / bpm) * 0.75; // quarter note length in sec
+      const noteSamples = Math.floor(sampleRate * noteDuration);
+      const totalSamples = noteSamples * notesFreq.length;
+      
+      const buffer = new ArrayBuffer(44 + totalSamples * 2);
+      const view = new DataView(buffer);
+
+      // RIFF header
+      writeString(view, 0, 'RIFF');
+      view.setUint32(4, 36 + totalSamples * 2, true);
+      writeString(view, 8, 'WAVE');
+      writeString(view, 12, 'fmt ');
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true); // PCM
+      view.setUint16(22, 1, true); // Mono
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, sampleRate * 2, true);
+      view.setUint16(32, 2, true);
+      view.setUint16(34, 16, true); // 16-bit
+      writeString(view, 36, 'data');
+      view.setUint32(40, totalSamples * 2, true);
+
+      // Synthesize sine wave sequence
+      let offset = 44;
+      notesFreq.forEach(freq => {
+        for (let i = 0; i < noteSamples; i++) {
+          const t = i / sampleRate;
+          const sample = Math.sin(2 * Math.PI * freq * t) * Math.exp(-t * 3); // decay envelope
+          view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+          offset += 2;
+        }
+      });
+
+      return new Blob([buffer], { type: 'audio/wav' });
+    }
+
+    // Helper: Create functional Standard MIDI (.mid) Blob
+    function createMidiFileBlob(midiNotes, bpm) {
+      const header = [0x4d, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x01, 0x00, 0x60];
+      const trackHeader = [0x4d, 0x54, 0x72, 0x6b];
+      
+      let trackData = [];
+      
+      // Set Tempo meta event
+      const microsecondsPerQuarter = Math.round(60000000 / bpm);
+      trackData.push(0x00, 0xFF, 0x51, 0x03, 
+        (microsecondsPerQuarter >> 16) & 0xFF,
+        (microsecondsPerQuarter >> 8) & 0xFF,
+        microsecondsPerQuarter & 0xFF
+      );
+
+      midiNotes.forEach(note => {
+        // Note On (channel 0, note, velocity 90)
+        trackData.push(0x00, 0x90, note, 0x5A);
+        // Delta time duration (96 ticks = 1 quarter note), Note Off
+        trackData.push(0x60, 0x80, note, 0x00);
+      });
+
+      // End of Track
+      trackData.push(0x00, 0xFF, 0x2F, 0x00);
+
+      const trackLength = trackData.length;
+      const trackLenBytes = [
+        (trackLength >> 24) & 0xFF,
+        (trackLength >> 16) & 0xFF,
+        (trackLength >> 8) & 0xFF,
+        trackLength & 0xFF
+      ];
+
+      const fullMidi = new Uint8Array([...header, ...trackHeader, ...trackLenBytes, ...trackData]);
+      return new Blob([fullMidi], { type: 'audio/midi' });
+    }
+
+    function writeString(view, offset, string) {
+      for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+      }
     }
   </script>
 </body>
